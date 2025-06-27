@@ -1,0 +1,3185 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GGOMES-LOG | Sistema de Gestão Agrícola</title>
+    
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+    
+    <!-- jsPDF para relatórios -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/jspdf-autotable@3.5.28/dist/jspdf.plugin.autotable.js"></script>
+    
+    <script>
+    tailwind.config = {
+        darkMode: 'class',
+        theme: {
+            extend: {
+                colors: {
+                    primary: {
+                        50: '#f4f3ff',
+                        100: '#e9e8ff',
+                        200: '#d7d5ff',
+                        300: '#bab8ff',
+                        400: '#9a97ff',
+                        500: '#7c7aff',
+                        600: '#5D5CDE', // Cor principal 
+                        700: '#5a55cc',
+                        800: '#4a46a8',
+                        900: '#383670',
+                        950: '#201f45',
+                    }
+                },
+                fontFamily: {
+                    'sans': ['Inter', 'sans-serif'],
+                },
+                spacing: {
+                    '128': '32rem',
+                },
+            }
+        }
+    }
+    </script>
+    
+    <style>
+        /* Esconder scrollbar mas manter funcionalidade */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Transições suaves */
+        .page-transition {
+            transition: all 0.3s ease-in-out;
+        }
+        
+        /* Animação de fade-in para toasts */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        
+        /* Animação de fade-out para toasts */
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100%); }
+        }
+        
+        .toast.fade-out {
+            animation: fadeOut 0.3s ease-in forwards;
+        }
+
+        /* Estilo para o sidebar mobile */
+        @media (max-width: 768px) {
+            #app-container {
+                position: relative;
+                overflow-x: hidden;
+            }
+            
+            #app-container aside {
+                position: fixed;
+                left: -100%;
+                transition: left 0.3s ease;
+                height: 100vh;
+                z-index: 50;
+            }
+            
+            #app-container.sidebar-open aside {
+                left: 0;
+            }
+
+            #app-container main {
+                transition: margin-left 0.3s ease;
+            }
+            
+            #app-container.sidebar-open main {
+                margin-left: 256px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+    <!-- Container principal da aplicação -->
+    <div id="app-container" class="flex h-screen overflow-hidden">
+        <!-- Menu lateral (Sidebar) -->
+        <aside class="w-64 hidden md:block bg-white dark:bg-gray-800 shadow-md z-10 flex-shrink-0">
+            <div class="h-full flex flex-col">
+                <!-- Logo e título -->
+                <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-center">
+                    <h1 class="text-xl font-bold text-primary-600 dark:text-primary-400">GGOMES-LOG</h1>
+                </div>
+                
+                <!-- Informações do usuário -->
+                <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center">
+                        <div class="h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+                            <i class="fas fa-user text-primary-600 dark:text-primary-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p id="sidebar-user-name" class="font-medium text-gray-800 dark:text-white">Administrador</p>
+                            <p id="sidebar-user-role" class="text-xs text-gray-500 dark:text-gray-400">Administrador</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Links de navegação -->
+                <div class="py-4 flex-1 overflow-y-auto scrollbar-hide">
+                    <nav class="px-2 space-y-1">
+                        <div class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Produção
+                        </div>
+                        
+                        <a href="#liberacoes" class="sidebar-link active bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 flex items-center px-4 py-2 rounded-md font-medium mb-1 transition-colors">
+                            <i class="fas fa-tasks mr-3 text-lg"></i>
+                            <span>Liberações</span>
+                        </a>
+
+                        <a href="#metas" class="sidebar-link flex items-center px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md font-medium mb-1 transition-colors">
+                            <i class="fas fa-bullseye mr-3 text-lg"></i>
+                            <span>Metas de Colheita</span>
+                        </a>
+                        
+                        <div class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Sistema
+                        </div>
+                        
+                        <a href="#configuracoes" class="sidebar-link flex items-center px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md font-medium mb-1 transition-colors">
+                            <i class="fas fa-cog mr-3 text-lg"></i>
+                            <span>Configurações</span>
+                        </a>
+                    </nav>
+                </div>
+                
+                <!-- Rodapé do sidebar -->
+                <div class="p-4 border-t border-gray-200 dark:border-gray-700 text-center">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">GGOMES-LOG &copy; 2025</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Versão 1.1</p>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Conteúdo principal -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Barra superior (Header) -->
+            <header class="bg-white dark:bg-gray-800 shadow-sm z-10">
+                <div class="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                    <!-- Toggle do menu lateral (mobile) -->
+                    <button id="mobile-menu-toggle" class="md:hidden p-2 rounded-md text-gray-500 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-700">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    
+                    <!-- Título da página -->
+                    <div class="flex-1 text-center md:text-left">
+                        <h2 id="page-title" class="text-lg font-semibold text-gray-800 dark:text-white">Liberações</h2>
+                    </div>
+                    
+                    <!-- Ações e perfil do usuário -->
+                    <div class="flex items-center space-x-3">
+                        <!-- Data atual -->
+                        <div class="hidden sm:block mr-2">
+                            <span id="current-date" class="text-sm text-gray-600 dark:text-gray-400">--/--/----</span>
+                        </div>
+                        
+                        <!-- Toggle de tema claro/escuro -->
+                        <button id="toggle-theme" class="p-2 rounded-md text-gray-500 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-700">
+                            <i class="fas fa-moon dark:hidden"></i>
+                            <i class="fas fa-sun hidden dark:inline-block"></i>
+                        </button>
+                        
+                        <!-- Perfil do usuário -->
+                        <div class="flex items-center">
+                            <div class="mr-2 text-right hidden sm:block">
+                                <div id="user-name" class="text-sm font-medium text-gray-800 dark:text-white">Administrador</div>
+                                <div class="flex items-center">
+                                    <span id="user-role-badge" class="px-2 py-1 rounded text-xs font-medium bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300">Admin</span>
+                                </div>
+                            </div>
+                            <div class="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+                                <i class="fas fa-user text-primary-600 dark:text-primary-400"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Conteúdo principal -->
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 dark:bg-gray-900 p-4">
+                <!-- Toast container para mensagens -->
+                <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-4"></div>
+                
+                <!-- Conteúdo de Liberações -->
+                <div id="content-liberacoes" class="content">
+                    <div class="mb-4">
+                        <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Liberações</h2>
+                        <p class="text-gray-600 dark:text-gray-400">Gerenciamento de liberações de produção</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Formulário de liberação -->
+                        <div class="lg:col-span-1">
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Registrar Liberação</h3>
+                                
+                                <form id="form-liberacao">
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="liberacao-frente">
+                                            Frente *
+                                        </label>
+                                        <input type="text" id="liberacao-frente" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Ex: Frente 01" required>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="liberacao-fazenda">
+                                            Fazenda *
+                                        </label>
+                                        <input type="text" id="liberacao-fazenda" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Ex: Fazenda São João" required>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="liberacao-numero">
+                                            Número da Liberação
+                                        </label>
+                                        <input type="text" id="liberacao-numero" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Ex: LIB-2025-001">
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="liberacao-previsto">
+                                            Previsto (T) *
+                                        </label>
+                                        <input type="number" step="0.01" id="liberacao-previsto" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Ex: 1000" required>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="liberacao-realizado">
+                                            Realizado (T) *
+                                        </label>
+                                        <input type="number" step="0.01" id="liberacao-realizado" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Ex: 850" required>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="liberacao-data">
+                                            Data *
+                                        </label>
+                                        <input type="date" id="liberacao-data" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" required>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="liberacao-observacoes">
+                                            Observações
+                                        </label>
+                                        <textarea id="liberacao-observacoes" rows="2" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Observações adicionais"></textarea>
+                                    </div>
+                                    
+                                    <div class="flex items-center space-x-2">
+                                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg text-sm">
+                                            <i class="fas fa-save mr-2"></i> Registrar Liberação
+                                        </button>
+                                        <button type="reset" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white font-medium rounded-lg text-sm">
+                                            <i class="fas fa-times mr-2"></i> Cancelar
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <!-- Resumo e tabela -->
+                        <div class="lg:col-span-2">
+                            <!-- Filtros e resumo -->
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
+                                <div class="flex justify-between mb-3">
+                                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Filtros</h3>
+                                    <button id="btn-export-liberacoes" class="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg">
+                                        <i class="fas fa-file-export mr-1"></i> Exportar Dados
+                                    </button>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="filtro-liberacao-frente">
+                                            Frente
+                                        </label>
+                                        <select id="filtro-liberacao-frente" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+                                            <option value="">Todas</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="filtro-liberacao-fazenda">
+                                            Fazenda
+                                        </label>
+                                        <select id="filtro-liberacao-fazenda" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+                                            <option value="">Todas</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <!-- Resumo -->
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                                    <div class="bg-gray-50 dark:bg-gray-900/30 p-3 rounded-lg">
+                                        <div class="text-center">
+                                            <span class="text-sm text-gray-500 dark:text-gray-400">Total Previsto</span>
+                                            <p id="resumo-total-previsto" class="text-xl font-bold text-gray-800 dark:text-white">0</p>
+                                        </div>
+                                    </div>
+                                    <div class="bg-gray-50 dark:bg-gray-900/30 p-3 rounded-lg">
+                                        <div class="text-center">
+                                            <span class="text-sm text-gray-500 dark:text-gray-400">Total Realizado</span>
+                                            <p id="resumo-total-realizado" class="text-xl font-bold text-green-600 dark:text-green-400">0</p>
+                                        </div>
+                                    </div>
+                                    <div class="bg-gray-50 dark:bg-gray-900/30 p-3 rounded-lg">
+                                        <div class="text-center">
+                                            <span class="text-sm text-gray-500 dark:text-gray-400">Restante</span>
+                                            <p id="resumo-total-restante" class="text-xl font-bold text-red-600 dark:text-red-400">0</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Tabela de liberações -->
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Liberações</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                        <thead class="bg-gray-50 dark:bg-gray-700">
+                                            <tr>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Frente</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Fazenda</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nº Liberação</th>
+                                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Previsto</th>
+                                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Realizado</th>
+                                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Restante</th>
+                                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Progresso</th>
+                                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabela-liberacoes" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                            <tr>
+                                                <td colspan="8" class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
+                                                    Carregando liberações...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Conteúdo de Metas de Colheita -->
+                <div id="content-metas" class="content hidden">
+                    <div class="mb-4">
+                        <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Metas de Colheita</h2>
+                        <p class="text-gray-600 dark:text-gray-400">Gestão de frentes, metas e acompanhamento diário da colheita</p>
+                    </div>
+                    
+                    <!-- Abas de Metas -->
+                    <div class="mb-6">
+                        <div class="border-b border-gray-200 dark:border-gray-700">
+                            <nav class="-mb-px flex space-x-8">
+                                <button class="tab-button active py-2 px-1 border-b-2 border-primary-500 font-medium text-sm text-primary-600 dark:text-primary-400" data-tab="frentes">
+                                    <i class="fas fa-map-marker-alt mr-2"></i>Frentes
+                                </button>
+                                <button class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300" data-tab="metas">
+                                    <i class="fas fa-bullseye mr-2"></i>Metas
+                                </button>
+                                <button class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300" data-tab="diario">
+                                    <i class="fas fa-calendar-day mr-2"></i>Lançamento Diário
+                                </button>
+                                <button class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300" data-tab="acompanhamento">
+                                    <i class="fas fa-chart-line mr-2"></i>Acompanhamento
+                                </button>
+                            </nav>
+                        </div>
+                    </div>
+
+                    <!-- Aba Frentes -->
+                    <div id="tab-frentes" class="tab-content">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Formulário de Frentes -->
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Cadastrar Frente</h3>
+                                
+                                <form id="form-frente">
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="frente-nome">
+                                            Nome da Frente *
+                                        </label>
+                                        <input type="text" id="frente-nome" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Ex: Frente 01" required>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="frente-fazenda">
+                                            Fazenda *
+                                        </label>
+                                        <input type="text" id="frente-fazenda" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Ex: Fazenda São João" required>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="frente-responsavel">
+                                            Responsável
+                                        </label>
+                                        <input type="text" id="frente-responsavel" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Ex: João Silva">
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="frente-status">
+                                            Status *
+                                        </label>
+                                        <select id="frente-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                                            <option value="ativa">Ativa</option>
+                                            <option value="inativa">Inativa</option>
+                                            <option value="manutencao">Manutenção</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="frente-observacoes">
+                                            Observações
+                                        </label>
+                                        <textarea id="frente-observacoes" rows="2" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Observações sobre a frente"></textarea>
+                                    </div>
+                                    
+                                    <div class="flex items-center space-x-2">
+                                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg text-sm">
+                                            <i class="fas fa-save mr-2"></i> Cadastrar Frente
+                                        </button>
+                                        <button type="reset" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white font-medium rounded-lg text-sm">
+                                            <i class="fas fa-times mr-2"></i> Cancelar
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Lista de Frentes -->
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Frentes Cadastradas</h3>
+                                
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                        <thead class="bg-gray-50 dark:bg-gray-700">
+                                            <tr>
+                                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Nome</th>
+                                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Fazenda</th>
+                                                <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
+                                                <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabela-frentes" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                            <tr>
+                                                <td colspan="4" class="px-3 py-2 text-center text-gray-500 dark:text-gray-400">
+                                                    Carregando frentes...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Aba Metas -->
+                    <div id="tab-metas" class="tab-content hidden">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Formulário de Metas -->
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Definir Meta</h3>
+                                
+                                <form id="form-meta">
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="meta-frente">
+                                            Frente *
+                                        </label>
+                                        <select id="meta-frente" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                                            <option value="">Selecione uma frente</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="meta-periodo">
+                                            Período *
+                                        </label>
+                                        <select id="meta-periodo" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                                            <option value="diario">Diário</option>
+                                            <option value="semanal">Semanal</option>
+                                            <option value="mensal">Mensal</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="meta-valor">
+                                            Meta (Toneladas) *
+                                        </label>
+                                        <input type="number" step="0.01" id="meta-valor" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Ex: 150.00" required>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="meta-data-inicio">
+                                            Data de Início *
+                                        </label>
+                                        <input type="date" id="meta-data-inicio" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="meta-data-fim">
+                                            Data de Fim *
+                                        </label>
+                                        <input type="date" id="meta-data-fim" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="meta-observacoes">
+                                            Observações
+                                        </label>
+                                        <textarea id="meta-observacoes" rows="2" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Observações sobre a meta"></textarea>
+                                    </div>
+                                    
+                                    <div class="flex items-center space-x-2">
+                                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg text-sm">
+                                            <i class="fas fa-save mr-2"></i> Definir Meta
+                                        </button>
+                                        <button type="reset" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white font-medium rounded-lg text-sm">
+                                            <i class="fas fa-times mr-2"></i> Cancelar
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Lista de Metas -->
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Metas Definidas</h3>
+                                
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                        <thead class="bg-gray-50 dark:bg-gray-700">
+                                            <tr>
+                                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Frente</th>
+                                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Período</th>
+                                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Meta (T)</th>
+                                                <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
+                                                <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabela-metas" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                            <tr>
+                                                <td colspan="5" class="px-3 py-2 text-center text-gray-500 dark:text-gray-400">
+                                                    Carregando metas...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Aba Lançamento Diário -->
+                    <div id="tab-diario" class="tab-content hidden">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Formulário de Lançamento Diário -->
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Lançamento Diário</h3>
+                                
+                                <form id="form-lancamento">
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="lancamento-frente">
+                                            Frente *
+                                        </label>
+                                        <select id="lancamento-frente" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                                            <option value="">Selecione uma frente</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="lancamento-data">
+                                            Data *
+                                        </label>
+                                        <input type="date" id="lancamento-data" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="lancamento-colhido">
+                                            Quantidade Colhida (T) *
+                                        </label>
+                                        <input type="number" step="0.01" id="lancamento-colhido" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Ex: 120.50" required>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="lancamento-turno">
+                                            Turno *
+                                        </label>
+                                        <select id="lancamento-turno" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                                            <option value="manha">Manhã</option>
+                                            <option value="tarde">Tarde</option>
+                                            <option value="noite">Noite</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="lancamento-operador">
+                                            Operador
+                                        </label>
+                                        <input type="text" id="lancamento-operador" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Ex: José Santos">
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="lancamento-observacoes">
+                                            Observações
+                                        </label>
+                                        <textarea id="lancamento-observacoes" rows="2" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Observações do dia"></textarea>
+                                    </div>
+                                    
+                                    <div class="flex items-center space-x-2">
+                                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg text-sm">
+                                            <i class="fas fa-save mr-2"></i> Registrar Lançamento
+                                        </button>
+                                        <button type="reset" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white font-medium rounded-lg text-sm">
+                                            <i class="fas fa-times mr-2"></i> Cancelar
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Lançamentos Recentes -->
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Lançamentos Recentes</h3>
+                                
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                        <thead class="bg-gray-50 dark:bg-gray-700">
+                                            <tr>
+                                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Data</th>
+                                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Frente</th>
+                                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Colhido (T)</th>
+                                                <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Turno</th>
+                                                <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabela-lancamentos" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                            <tr>
+                                                <td colspan="5" class="px-3 py-2 text-center text-gray-500 dark:text-gray-400">
+                                                    Carregando lançamentos...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Aba Acompanhamento -->
+                    <div id="tab-acompanhamento" class="tab-content hidden">
+                        <!-- Filtros de Acompanhamento -->
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Filtros de Acompanhamento</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="filtro-acompanhamento-frente">
+                                        Frente
+                                    </label>
+                                    <select id="filtro-acompanhamento-frente" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        <option value="">Todas as frentes</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="filtro-acompanhamento-data-inicio">
+                                        Data Início
+                                    </label>
+                                    <input type="date" id="filtro-acompanhamento-data-inicio" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="filtro-acompanhamento-data-fim">
+                                        Data Fim
+                                    </label>
+                                    <input type="date" id="filtro-acompanhamento-data-fim" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 flex space-x-2">
+                                <button id="btn-aplicar-filtro-acompanhamento" class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg text-sm">
+                                    <i class="fas fa-filter mr-2"></i> Aplicar Filtros
+                                </button>
+                                <button id="btn-exportar-acompanhamento" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg text-sm">
+                                    <i class="fas fa-file-export mr-2"></i> Exportar Relatório
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Resumo do Acompanhamento -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-blue-600 dark:text-blue-400" id="resumo-total-metas">0</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">Metas Ativas</div>
+                                </div>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-green-600 dark:text-green-400" id="resumo-total-colhido">0 T</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">Total Colhido</div>
+                                </div>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-orange-600 dark:text-orange-400" id="resumo-total-meta">0 T</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">Meta Total</div>
+                                </div>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-purple-600 dark:text-purple-400" id="resumo-percentual-meta">0%</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">% da Meta</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tabela de Acompanhamento -->
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+                            <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Acompanhamento por Frente</h3>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                    <thead class="bg-gray-50 dark:bg-gray-700">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Frente</th>
+                                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Meta (T)</th>
+                                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Colhido (T)</th>
+                                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Restante (T)</th>
+                                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">% Meta</th>
+                                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
+                                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Progresso</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabela-acompanhamento" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                        <tr>
+                                            <td colspan="7" class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
+                                                Carregando acompanhamento...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Conteúdo de Configurações -->
+                <div id="content-configuracoes" class="content hidden">
+                    <div class="mb-4">
+                        <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Configurações</h2>
+                        <p class="text-gray-600 dark:text-gray-400">Configurações do sistema e gestão de dados</p>
+                    </div>
+                    
+                    <!-- Backup e Restauração -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Backup e Restauração</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <h4 class="text-md font-medium text-gray-700 dark:text-gray-300 mb-2">Exportar Dados</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Exporte todos os dados para um arquivo JSON de backup</p>
+                                <button id="btn-exportar-json" class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg text-sm">
+                                    <i class="fas fa-download mr-2"></i> Exportar Backup
+                                </button>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-md font-medium text-gray-700 dark:text-gray-300 mb-2">Importar Dados</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Importe dados de um arquivo JSON previamente exportado</p>
+                                
+                                <button id="btn-importar-json" class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg text-sm">
+                                    <i class="fas fa-upload mr-2"></i> Importar Backup
+                                </button>
+                                <input type="file" id="import-json-file" accept=".json" class="hidden">
+                            </div>
+                        </div>
+                        
+                        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                            <h4 class="text-md font-medium text-gray-700 dark:text-gray-300 mb-2">Limpar Todos os Dados</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                <span class="text-red-500 font-semibold">Atenção:</span> Esta ação irá remover permanentemente todos os dados do sistema.
+                            </p>
+                            <button id="btn-limpar-dados" class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg text-sm">
+                                <i class="fas fa-trash-alt mr-2"></i> Limpar Todos os Dados
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Relatórios -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Relatórios do Sistema</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <button id="btn-relatorio-liberacoes" class="inline-flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg text-sm">
+                                <i class="fas fa-chart-line mr-2"></i> Relatório de Liberações
+                            </button>
+                            <button id="btn-relatorio-metas" class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm">
+                                <i class="fas fa-bullseye mr-2"></i> Relatório de Metas
+                            </button>
+                            <button id="btn-relatorio-colheita" class="inline-flex items-center justify-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg text-sm">
+                                <i class="fas fa-seedling mr-2"></i> Relatório de Colheita
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Sobre o Sistema -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Sobre o Sistema</h3>
+                        
+                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                            <p class="mb-2"><strong>Nome:</strong> GGOMES-LOG</p>
+                            <p class="mb-2"><strong>Versão:</strong> 1.1.0</p>
+                            <p class="mb-2"><strong>Descrição:</strong> Sistema de Gestão Agrícola para acompanhamento de colheita, metas e logística.</p>
+                            <p class="mb-4"><strong>Desenvolvido por:</strong> GGOMES Technologies</p>
+                            
+                            <div class="text-xs mt-4 text-gray-500 dark:text-gray-400">
+                                <p>© 2025 GGOMES Technologies. Todos os direitos reservados.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Modal de confirmação para limpar dados -->
+    <div id="modal-limpar-dados" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Confirmação de Limpeza</h3>
+            
+            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                <span class="text-red-500 font-semibold">Atenção:</span> Esta ação irá remover <span class="font-semibold">PERMANENTEMENTE</span> todos os dados do sistema.
+            </p>
+            
+            <p class="text-gray-700 dark:text-gray-300 mb-6">
+                Para confirmar, digite "CONFIRMAR" no campo abaixo:
+            </p>
+            
+            <div class="mb-6">
+                <input type="text" id="confirmacao-texto" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-red-500 dark:focus:border-red-500" placeholder="Digite CONFIRMAR">
+            </div>
+            
+            <div class="flex justify-end space-x-4">
+                <button id="btn-cancelar-limpar" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white font-medium rounded-lg text-sm">
+                    <i class="fas fa-times mr-2"></i> Cancelar
+                </button>
+                <button id="btn-confirmar-limpar" class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg text-sm opacity-50 cursor-not-allowed" disabled>
+                    <i class="fas fa-trash-alt mr-2"></i> Sim, Limpar Tudo
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Banco de dados simulado expandido
+        const DB = {
+            // Inicialização do banco de dados
+            init: function() {
+                // Verificar se já existe algum dado
+                if (!localStorage.getItem('ggomes_liberacoes')) {
+                    // Obter a data atual para registros de hoje
+                    const hoje = new Date();
+                    const dataHoje = hoje.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+                    
+                    // Obter data de ontem para alguns registros
+                    const ontem = new Date();
+                    ontem.setDate(ontem.getDate() - 1);
+                    const dataOntem = ontem.toISOString().split('T')[0];
+                    
+                    // Dados iniciais de liberações
+                    const liberacoesIniciais = [
+                        { id: 'LIB-001', frente: 'Frente 01', fazenda: 'Fazenda São João', numero: 'LIB-2025-001', previsto: 1000, realizado: 850, restante: 150, data: dataOntem, observacoes: 'Liberação inicial', dataRegistro: new Date().toISOString() },
+                        { id: 'LIB-002', frente: 'Frente 02', fazenda: 'Fazenda Boa Vista', numero: 'LIB-2025-002', previsto: 1500, realizado: 1200, restante: 300, data: dataHoje, observacoes: 'Em andamento', dataRegistro: new Date().toISOString() }
+                    ];
+                    localStorage.setItem('ggomes_liberacoes', JSON.stringify(liberacoesIniciais));
+                    
+                    // Dados iniciais de frentes
+                    const frentesIniciais = [
+                        { id: 'FRENTE-001', nome: 'Frente 01', fazenda: 'Fazenda São João', responsavel: 'João Silva', status: 'ativa', observacoes: 'Frente principal', dataRegistro: new Date().toISOString() },
+                        { id: 'FRENTE-002', nome: 'Frente 02', fazenda: 'Fazenda Boa Vista', responsavel: 'Maria Santos', status: 'ativa', observacoes: 'Frente secundária', dataRegistro: new Date().toISOString() }
+                    ];
+                    localStorage.setItem('ggomes_frentes', JSON.stringify(frentesIniciais));
+                    
+                    // Dados iniciais de metas
+                    const metasIniciais = [
+                        { id: 'META-001', frenteId: 'FRENTE-001', periodo: 'diario', valor: 150, dataInicio: dataHoje, dataFim: dataHoje, observacoes: 'Meta diária padrão', dataRegistro: new Date().toISOString() },
+                        { id: 'META-002', frenteId: 'FRENTE-002', periodo: 'diario', valor: 180, dataInicio: dataHoje, dataFim: dataHoje, observacoes: 'Meta diária aumentada', dataRegistro: new Date().toISOString() }
+                    ];
+                    localStorage.setItem('ggomes_metas', JSON.stringify(metasIniciais));
+                    
+                    // Dados iniciais de lançamentos diários
+                    const lancamentosIniciais = [
+                        { id: 'LANC-001', frenteId: 'FRENTE-001', data: dataOntem, colhido: 145.5, turno: 'manha', operador: 'José Santos', observacoes: 'Bom rendimento', dataRegistro: new Date().toISOString() },
+                        { id: 'LANC-002', frenteId: 'FRENTE-002', data: dataOntem, colhido: 170.2, turno: 'tarde', operador: 'Pedro Lima', observacoes: 'Dentro da meta', dataRegistro: new Date().toISOString() }
+                    ];
+                    localStorage.setItem('ggomes_lancamentos', JSON.stringify(lancamentosIniciais));
+                    
+                    // Configurações
+                    localStorage.setItem('ggomes_config', JSON.stringify({
+                        temaEscuro: true,
+                        ultimoAcesso: new Date().toISOString()
+                    }));
+                }
+                
+                // Verificar se falta algum tipo de dado e inicializá-lo
+                const tabelas = ['liberacoes', 'frentes', 'metas', 'lancamentos'];
+                tabelas.forEach(tabela => {
+                    if (!localStorage.getItem(`ggomes_${tabela}`)) {
+                        localStorage.setItem(`ggomes_${tabela}`, JSON.stringify([]));
+                    }
+                });
+                
+                if (!localStorage.getItem('ggomes_config')) {
+                    localStorage.setItem('ggomes_config', JSON.stringify({ temaEscuro: true, ultimoAcesso: new Date().toISOString() }));
+                }
+                
+                // Atualizar última data de acesso
+                const config = JSON.parse(localStorage.getItem('ggomes_config'));
+                config.ultimoAcesso = new Date().toISOString();
+                localStorage.setItem('ggomes_config', JSON.stringify(config));
+            },
+            
+            // Método para limpar todos os dados
+            clearAll: function() {
+                try {
+                    const tabelas = ['liberacoes', 'frentes', 'metas', 'lancamentos'];
+                    tabelas.forEach(tabela => {
+                        localStorage.removeItem(`ggomes_${tabela}`);
+                        localStorage.setItem(`ggomes_${tabela}`, JSON.stringify([]));
+                    });
+                    
+                    // Manter apenas as configurações
+                    const config = JSON.parse(localStorage.getItem('ggomes_config') || '{}');
+                    localStorage.setItem('ggomes_config', JSON.stringify({
+                        ...config,
+                        ultimoAcesso: new Date().toISOString()
+                    }));
+                    
+                    return true;
+                } catch (error) {
+                    console.error('Erro ao limpar dados:', error);
+                    return false;
+                }
+            },
+            
+            // Exportar todos os dados para backup
+            exportData: function() {
+                try {
+                    const data = {
+                        liberacoes: JSON.parse(localStorage.getItem('ggomes_liberacoes') || '[]'),
+                        frentes: JSON.parse(localStorage.getItem('ggomes_frentes') || '[]'),
+                        metas: JSON.parse(localStorage.getItem('ggomes_metas') || '[]'),
+                        lancamentos: JSON.parse(localStorage.getItem('ggomes_lancamentos') || '[]'),
+                        config: JSON.parse(localStorage.getItem('ggomes_config') || '{}'),
+                        metaData: {
+                            exportDate: new Date().toISOString(),
+                            version: '1.1.0'
+                        }
+                    };
+                    
+                    return JSON.stringify(data, null, 2);
+                } catch (error) {
+                    console.error('Erro ao exportar dados:', error);
+                    throw new Error('Não foi possível exportar os dados.');
+                }
+            },
+            
+            // Importar dados de backup
+            importData: function(jsonData) {
+                try {
+                    const data = JSON.parse(jsonData);
+                    
+                    // Validar estrutura mínima de dados
+                    if (!data.liberacoes && !data.frentes && !data.metas && !data.lancamentos) {
+                        throw new Error('Arquivo de backup inválido ou corrompido.');
+                    }
+                    
+                    // Restaurar dados
+                    const tabelas = ['liberacoes', 'frentes', 'metas', 'lancamentos'];
+                    tabelas.forEach(tabela => {
+                        if (data[tabela]) {
+                            localStorage.setItem(`ggomes_${tabela}`, JSON.stringify(data[tabela]));
+                        }
+                    });
+                    
+                    if (data.config) {
+                        // Preservar tema atual mas atualizar outras configurações
+                        const currentConfig = JSON.parse(localStorage.getItem('ggomes_config') || '{}');
+                        const newConfig = {
+                            ...data.config,
+                            temaEscuro: currentConfig.temaEscuro, // Manter tema atual
+                            ultimoAcesso: new Date().toISOString() // Atualizar acesso
+                        };
+                        localStorage.setItem('ggomes_config', JSON.stringify(newConfig));
+                    }
+                    
+                    return true;
+                } catch (error) {
+                    console.error('Erro ao importar dados:', error);
+                    throw error;
+                }
+            },
+            
+            // Módulo de liberações (existente)
+            liberacoes: {
+                // Obter todas as liberações
+                getAll: function() {
+                    try {
+                        const liberacoes = localStorage.getItem('ggomes_liberacoes');
+                        return liberacoes ? JSON.parse(liberacoes) : [];
+                    } catch (error) {
+                        console.error("Erro ao obter liberações:", error);
+                        return [];
+                    }
+                },
+                
+                // Obter liberação por ID
+                get: function(id) {
+                    const liberacoes = this.getAll();
+                    return liberacoes.find(l => l.id === id);
+                },
+                
+                // Adicionar liberação
+                add: function(liberacao) {
+                    // Validar dados básicos
+                    if (!liberacao.id || !liberacao.frente || !liberacao.fazenda || liberacao.previsto === undefined || liberacao.realizado === undefined || !liberacao.data) {
+                        throw new Error('Dados incompletos. Preencha todos os campos obrigatórios.');
+                    }
+                    
+                    // Obter liberações
+                    const liberacoes = this.getAll();
+                    
+                    // Verificar se já existe uma liberação com o mesmo ID
+                    if (liberacoes.some(l => l.id === liberacao.id)) {
+                        throw new Error(`Já existe uma liberação com o ID "${liberacao.id}".`);
+                    }
+                    
+                    // Calcular restante
+                    if (liberacao.restante === undefined) {
+                        liberacao.restante = Number(liberacao.previsto) - Number(liberacao.realizado);
+                    }
+                    
+                    // Adicionar data de registro
+                    liberacao.dataRegistro = liberacao.dataRegistro || new Date().toISOString();
+                    
+                    // Adicionar liberação
+                    liberacoes.push(liberacao);
+                    localStorage.setItem('ggomes_liberacoes', JSON.stringify(liberacoes));
+                    
+                    return liberacao;
+                },
+                
+                // Atualizar liberação
+                update: function(liberacao) {
+                    // Validar dados básicos
+                    if (!liberacao.id) {
+                        throw new Error('ID da liberação é obrigatório.');
+                    }
+                    
+                    // Obter liberações
+                    const liberacoes = this.getAll();
+                    
+                    // Encontrar a liberação a ser atualizada
+                    const index = liberacoes.findIndex(l => l.id === liberacao.id);
+                    
+                    if (index === -1) {
+                        throw new Error(`Liberação com ID "${liberacao.id}" não encontrada.`);
+                    }
+                    
+                    // Recalcular o restante se necessário
+                    if (liberacao.previsto !== undefined || liberacao.realizado !== undefined) {
+                        const previsto = liberacao.previsto !== undefined ? 
+                            Number(liberacao.previsto) : 
+                            Number(liberacoes[index].previsto);
+                        const realizado = liberacao.realizado !== undefined ? 
+                            Number(liberacao.realizado) : 
+                            Number(liberacoes[index].realizado);
+                        
+                        liberacao.restante = previsto - realizado;
+                    }
+                    
+                    // Atualizar liberação
+                    liberacoes[index] = { ...liberacoes[index], ...liberacao };
+                    localStorage.setItem('ggomes_liberacoes', JSON.stringify(liberacoes));
+                    
+                    return liberacoes[index];
+                },
+                
+                // Remover liberação
+                remove: function(id) {
+                    // Obter liberações
+                    const liberacoes = this.getAll();
+                    
+                    // Verificar se a liberação existe
+                    const index = liberacoes.findIndex(l => l.id === id);
+                    
+                    if (index === -1) {
+                        throw new Error(`Liberação com ID "${id}" não encontrada.`);
+                    }
+                    
+                    // Remover liberação
+                    liberacoes.splice(index, 1);
+                    localStorage.setItem('ggomes_liberacoes', JSON.stringify(liberacoes));
+                    
+                    return true;
+                },
+                
+                // Obter totais
+                getTotals: function(filtroFrente = '', filtroFazenda = '') {
+                    // Obter liberações
+                    let liberacoes = this.getAll();
+                    
+                    // Aplicar filtros
+                    if (filtroFrente) {
+                        liberacoes = liberacoes.filter(l => l.frente === filtroFrente);
+                    }
+                    
+                    if (filtroFazenda) {
+                        liberacoes = liberacoes.filter(l => l.fazenda === filtroFazenda);
+                    }
+                    
+                    // Calcular totais
+                    const totals = {
+                        previsto: 0,
+                        realizado: 0,
+                        restante: 0
+                    };
+                    
+                    liberacoes.forEach(l => {
+                        totals.previsto += Number(l.previsto) || 0;
+                        totals.realizado += Number(l.realizado) || 0;
+                        totals.restante += Number(l.restante) || 0;
+                    });
+                    
+                    return totals;
+                },
+                
+                // Obter frentes e fazendas únicas
+                getUniqueValues: function() {
+                    const liberacoes = this.getAll();
+                    
+                    const frentes = new Set();
+                    const fazendas = new Set();
+                    
+                    liberacoes.forEach(l => {
+                        frentes.add(l.frente);
+                        fazendas.add(l.fazenda);
+                    });
+                    
+                    return {
+                        frentes: Array.from(frentes).sort(),
+                        fazendas: Array.from(fazendas).sort()
+                    };
+                }
+            },
+
+            // Módulo de frentes
+            frentes: {
+                // Obter todas as frentes
+                getAll: function() {
+                    try {
+                        const frentes = localStorage.getItem('ggomes_frentes');
+                        return frentes ? JSON.parse(frentes) : [];
+                    } catch (error) {
+                        console.error("Erro ao obter frentes:", error);
+                        return [];
+                    }
+                },
+                
+                // Obter frente por ID
+                get: function(id) {
+                    const frentes = this.getAll();
+                    return frentes.find(f => f.id === id);
+                },
+                
+                // Adicionar frente
+                add: function(frente) {
+                    if (!frente.id || !frente.nome || !frente.fazenda || !frente.status) {
+                        throw new Error('Dados incompletos. Preencha todos os campos obrigatórios.');
+                    }
+                    
+                    const frentes = this.getAll();
+                    
+                    // Verificar se já existe uma frente com o mesmo nome
+                    if (frentes.some(f => f.nome === frente.nome && f.fazenda === frente.fazenda)) {
+                        throw new Error(`Já existe uma frente com o nome "${frente.nome}" na fazenda "${frente.fazenda}".`);
+                    }
+                    
+                    frente.dataRegistro = frente.dataRegistro || new Date().toISOString();
+                    frentes.push(frente);
+                    localStorage.setItem('ggomes_frentes', JSON.stringify(frentes));
+                    
+                    return frente;
+                },
+                
+                // Atualizar frente
+                update: function(frente) {
+                    if (!frente.id) {
+                        throw new Error('ID da frente é obrigatório.');
+                    }
+                    
+                    const frentes = this.getAll();
+                    const index = frentes.findIndex(f => f.id === frente.id);
+                    
+                    if (index === -1) {
+                        throw new Error(`Frente com ID "${frente.id}" não encontrada.`);
+                    }
+                    
+                    frentes[index] = { ...frentes[index], ...frente };
+                    localStorage.setItem('ggomes_frentes', JSON.stringify(frentes));
+                    
+                    return frentes[index];
+                },
+                
+                // Remover frente
+                remove: function(id) {
+                    const frentes = this.getAll();
+                    const index = frentes.findIndex(f => f.id === id);
+                    
+                    if (index === -1) {
+                        throw new Error(`Frente com ID "${id}" não encontrada.`);
+                    }
+                    
+                    // Verificar se há metas ou lançamentos vinculados a esta frente
+                    const metas = DB.metas.getAll().filter(m => m.frenteId === id);
+                    const lancamentos = DB.lancamentos.getAll().filter(l => l.frenteId === id);
+                    
+                    if (metas.length > 0 || lancamentos.length > 0) {
+                        throw new Error('Não é possível excluir a frente pois há metas ou lançamentos vinculados a ela.');
+                    }
+                    
+                    frentes.splice(index, 1);
+                    localStorage.setItem('ggomes_frentes', JSON.stringify(frentes));
+                    
+                    return true;
+                },
+                
+                // Obter frentes ativas
+                getAtivas: function() {
+                    return this.getAll().filter(f => f.status === 'ativa');
+                }
+            },
+
+            // Módulo de metas
+            metas: {
+                // Obter todas as metas
+                getAll: function() {
+                    try {
+                        const metas = localStorage.getItem('ggomes_metas');
+                        return metas ? JSON.parse(metas) : [];
+                    } catch (error) {
+                        console.error("Erro ao obter metas:", error);
+                        return [];
+                    }
+                },
+                
+                // Obter meta por ID
+                get: function(id) {
+                    const metas = this.getAll();
+                    return metas.find(m => m.id === id);
+                },
+                
+                // Adicionar meta
+                add: function(meta) {
+                    if (!meta.id || !meta.frenteId || !meta.periodo || meta.valor === undefined || !meta.dataInicio || !meta.dataFim) {
+                        throw new Error('Dados incompletos. Preencha todos os campos obrigatórios.');
+                    }
+                    
+                    const metas = this.getAll();
+                    
+                    // Verificar se já existe uma meta para a mesma frente no mesmo período
+                    const metaExistente = metas.find(m => 
+                        m.frenteId === meta.frenteId && 
+                        m.periodo === meta.periodo &&
+                        ((meta.dataInicio >= m.dataInicio && meta.dataInicio <= m.dataFim) ||
+                         (meta.dataFim >= m.dataInicio && meta.dataFim <= m.dataFim))
+                    );
+                    
+                    if (metaExistente) {
+                        throw new Error('Já existe uma meta para esta frente no período selecionado.');
+                    }
+                    
+                    meta.dataRegistro = meta.dataRegistro || new Date().toISOString();
+                    metas.push(meta);
+                    localStorage.setItem('ggomes_metas', JSON.stringify(metas));
+                    
+                    return meta;
+                },
+                
+                // Atualizar meta
+                update: function(meta) {
+                    if (!meta.id) {
+                        throw new Error('ID da meta é obrigatório.');
+                    }
+                    
+                    const metas = this.getAll();
+                    const index = metas.findIndex(m => m.id === meta.id);
+                    
+                    if (index === -1) {
+                        throw new Error(`Meta com ID "${meta.id}" não encontrada.`);
+                    }
+                    
+                    metas[index] = { ...metas[index], ...meta };
+                    localStorage.setItem('ggomes_metas', JSON.stringify(metas));
+                    
+                    return metas[index];
+                },
+                
+                // Remover meta
+                remove: function(id) {
+                    const metas = this.getAll();
+                    const index = metas.findIndex(m => m.id === id);
+                    
+                    if (index === -1) {
+                        throw new Error(`Meta com ID "${id}" não encontrada.`);
+                    }
+                    
+                    metas.splice(index, 1);
+                    localStorage.setItem('ggomes_metas', JSON.stringify(metas));
+                    
+                    return true;
+                },
+                
+                // Obter metas ativas
+                getAtivas: function(dataRef = null) {
+                    const data = dataRef || new Date().toISOString().split('T')[0];
+                    return this.getAll().filter(m => m.dataInicio <= data && m.dataFim >= data);
+                }
+            },
+
+            // Módulo de lançamentos diários
+            lancamentos: {
+                // Obter todos os lançamentos
+                getAll: function() {
+                    try {
+                        const lancamentos = localStorage.getItem('ggomes_lancamentos');
+                        return lancamentos ? JSON.parse(lancamentos) : [];
+                    } catch (error) {
+                        console.error("Erro ao obter lançamentos:", error);
+                        return [];
+                    }
+                },
+                
+                // Obter lançamento por ID
+                get: function(id) {
+                    const lancamentos = this.getAll();
+                    return lancamentos.find(l => l.id === id);
+                },
+                
+                // Adicionar lançamento
+                add: function(lancamento) {
+                    if (!lancamento.id || !lancamento.frenteId || !lancamento.data || lancamento.colhido === undefined || !lancamento.turno) {
+                        throw new Error('Dados incompletos. Preencha todos os campos obrigatórios.');
+                    }
+                    
+                    const lancamentos = this.getAll();
+                    
+                    lancamento.dataRegistro = lancamento.dataRegistro || new Date().toISOString();
+                    lancamentos.push(lancamento);
+                    localStorage.setItem('ggomes_lancamentos', JSON.stringify(lancamentos));
+                    
+                    return lancamento;
+                },
+                
+                // Atualizar lançamento
+                update: function(lancamento) {
+                    if (!lancamento.id) {
+                        throw new Error('ID do lançamento é obrigatório.');
+                    }
+                    
+                    const lancamentos = this.getAll();
+                    const index = lancamentos.findIndex(l => l.id === lancamento.id);
+                    
+                    if (index === -1) {
+                        throw new Error(`Lançamento com ID "${lancamento.id}" não encontrado.`);
+                    }
+                    
+                    lancamentos[index] = { ...lancamentos[index], ...lancamento };
+                    localStorage.setItem('ggomes_lancamentos', JSON.stringify(lancamentos));
+                    
+                    return lancamentos[index];
+                },
+                
+                // Remover lançamento
+                remove: function(id) {
+                    const lancamentos = this.getAll();
+                    const index = lancamentos.findIndex(l => l.id === id);
+                    
+                    if (index === -1) {
+                        throw new Error(`Lançamento com ID "${id}" não encontrado.`);
+                    }
+                    
+                    lancamentos.splice(index, 1);
+                    localStorage.setItem('ggomes_lancamentos', JSON.stringify(lancamentos));
+                    
+                    return true;
+                },
+                
+                // Obter lançamentos por frente
+                getByFrente: function(frenteId) {
+                    return this.getAll().filter(l => l.frenteId === frenteId);
+                },
+                
+                // Obter lançamentos por período
+                getByPeriodo: function(dataInicio, dataFim) {
+                    return this.getAll().filter(l => l.data >= dataInicio && l.data <= dataFim);
+                },
+                
+                // Obter total colhido por frente em um período
+                getTotalColhidoPorFrente: function(frenteId, dataInicio, dataFim) {
+                    const lancamentos = this.getAll().filter(l => 
+                        l.frenteId === frenteId && 
+                        l.data >= dataInicio && 
+                        l.data <= dataFim
+                    );
+                    
+                    return lancamentos.reduce((total, l) => total + Number(l.colhido), 0);
+                }
+            }
+        };
+        
+        // Inicializar o banco de dados
+        DB.init();
+        
+        // Utilidades e funções auxiliares (expandidas)
+        const Utils = {
+            // Formatar número como toneladas
+            formatarToneladas: function(valor) {
+                const numero = Number(valor) || 0;
+                return numero.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' T';
+            },
+            
+            // Formatar data no formato dd/mm/aaaa
+            formatarData: function(dataStr) {
+                if (!dataStr) return '--/--/----';
+                
+                const data = new Date(dataStr);
+                return data.toLocaleDateString('pt-BR');
+            },
+            
+            // Gerar ID único baseado em um prefixo e timestamp
+            gerarId: function(prefixo) {
+                return (prefixo || 'id') + '-' + Date.now();
+            },
+            
+            // Mostrar toast de notificação temporário
+            exibirToast: function(mensagem, tipo = 'success', duracao = 3000) {
+                const toastContainer = document.getElementById('toast-container');
+                
+                // Criar elemento de toast
+                const toast = document.createElement('div');
+                toast.className = `toast animate-fade-in p-4 mb-4 rounded-lg shadow-md flex items-center justify-between ${
+                    tipo === 'success' ? 'bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300' :
+                    tipo === 'error' ? 'bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-300' :
+                    tipo === 'warn' ? 'bg-yellow-100 dark:bg-yellow-800 text-yellow-700 dark:text-yellow-300' :
+                    'bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300'
+                }`;
+                
+                // Ícone baseado no tipo
+                const icone = 
+                    tipo === 'success' ? 'fa-check-circle' :
+                    tipo === 'error' ? 'fa-exclamation-circle' :
+                    tipo === 'warn' ? 'fa-exclamation-triangle' :
+                    'fa-info-circle';
+                
+                toast.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas ${icone} mr-2"></i>
+                        <span>${mensagem}</span>
+                    </div>
+                    <button class="ml-4 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus:outline-none">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                // Adicionar evento de fechamento
+                toast.querySelector('button').addEventListener('click', () => {
+                    toast.classList.add('fade-out');
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            toast.parentNode.removeChild(toast);
+                        }
+                    }, 300);
+                });
+                
+                // Adicionar ao container
+                toastContainer.appendChild(toast);
+                
+                // Remover após a duração especificada
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.classList.add('fade-out');
+                        setTimeout(() => {
+                            if (toast.parentNode) {
+                                toast.parentNode.removeChild(toast);
+                            }
+                        }, 300);
+                    }
+                }, duracao);
+            },
+            
+            // Exportar dados para PDF usando jsPDF e jspdf-autotable
+            exportarPDF: function(titulo, dados, colunas, nomeArquivo) {
+                if (!window.jspdf || !window.jspdf.jsPDF) {
+                    this.exibirToast('Biblioteca PDF não carregada', 'error');
+                    return;
+                }
+                
+                if (!dados || !dados.length) {
+                    this.exibirToast('Não há dados para exportar', 'error');
+                    return;
+                }
+                
+                try {
+                    const { jsPDF } = window.jspdf;
+                    
+                    // Criar documento PDF
+                    const doc = new jsPDF();
+                    
+                    // Adicionar título
+                    doc.setFontSize(18);
+                    doc.text(titulo, 14, 22);
+                    
+                    // Adicionar data e hora
+                    doc.setFontSize(10);
+                    doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 14, 30);
+                    
+                    // Adicionar tabela
+                    doc.autoTable({
+                        head: [colunas.map(col => col.header)],
+                        body: dados.map(item => colunas.map(col => {
+                            // Obter valor usando a chave ou função personalizada
+                            if (typeof col.dataKey === 'function') {
+                                return col.dataKey(item);
+                            }
+                            return item[col.dataKey];
+                        })),
+                        startY: 35,
+                        theme: 'grid',
+                        styles: {
+                            fontSize: 8,
+                            cellPadding: 3
+                        },
+                        headStyles: {
+                            fillColor: [93, 92, 222],
+                            textColor: [255, 255, 255],
+                            fontStyle: 'bold'
+                        },
+                        alternateRowStyles: {
+                            fillColor: [240, 240, 240]
+                        }
+                    });
+                    
+                    // Adicionar rodapé
+                    const pageCount = doc.internal.getNumberOfPages();
+                    for(let i = 1; i <= pageCount; i++) {
+                        doc.setPage(i);
+                        doc.setFontSize(8);
+                        doc.text(`Página ${i} de ${pageCount} - GGOMES-LOG`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
+                    }
+                    
+                    // Salvar o documento
+                    doc.save(nomeArquivo || 'relatorio.pdf');
+                    
+                    this.exibirToast('Relatório PDF gerado com sucesso', 'success');
+                } catch (error) {
+                    console.error('Erro ao gerar PDF:', error);
+                    this.exibirToast('Erro ao gerar PDF', 'error');
+                }
+            },
+
+            // Obter nome da frente por ID
+            getNomeFrente: function(frenteId) {
+                const frente = DB.frentes.get(frenteId);
+                return frente ? frente.nome : 'Frente não encontrada';
+            },
+
+            // Calcular status da meta baseado no progresso
+            getStatusMeta: function(progresso) {
+                if (progresso >= 100) return { texto: 'Atingida', cor: 'green' };
+                if (progresso >= 80) return { texto: 'Próximo', cor: 'yellow' };
+                if (progresso >= 50) return { texto: 'Progresso', cor: 'blue' };
+                return { texto: 'Abaixo', cor: 'red' };
+            }
+        };
+        
+        // *** INICIALIZAÇÃO DA APLICAÇÃO ***
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configurar tema (claro/escuro)
+            configurarTema();
+            
+            // Navegação entre páginas
+            configurarNavegacao();
+            
+            // Configurar interações do menu lateral móvel
+            configurarMenuLateral();
+            
+            // Configurar data atual no cabeçalho
+            atualizarDataAtual();
+            
+            // Configurar funcionalidades da tela de liberações
+            inicializarLiberacoes();
+            
+            // Configurar funcionalidades da tela de metas
+            inicializarMetas();
+            
+            // Configurar funcionalidades da tela de configurações
+            inicializarConfiguracoes();
+            
+            // Mostrar página inicial (liberações)
+            document.getElementById('content-liberacoes').classList.remove('hidden');
+            document.querySelector('a[href="#liberacoes"]').classList.add('active');
+        });
+        
+        // *** FUNÇÕES DE INICIALIZAÇÃO DE COMPONENTES ***
+        
+        // Configurar tema (claro/escuro)
+        function configurarTema() {
+            const toggleButton = document.getElementById('toggle-theme');
+            
+            // Verificar preferência do usuário
+            function applyTheme() {
+                const config = JSON.parse(localStorage.getItem('ggomes_config') || '{}');
+                if (config.temaEscuro) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+            
+            // Aplicar tema inicial
+            applyTheme();
+            
+            // Alternar tema ao clicar no botão
+            toggleButton.addEventListener('click', function() {
+                const config = JSON.parse(localStorage.getItem('ggomes_config') || '{}');
+                config.temaEscuro = !config.temaEscuro;
+                localStorage.setItem('ggomes_config', JSON.stringify(config));
+                
+                applyTheme();
+            });
+            
+            // Detectar mudança de tema do sistema
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                    const config = JSON.parse(localStorage.getItem('ggomes_config') || '{}');
+                    config.temaEscuro = e.matches;
+                    localStorage.setItem('ggomes_config', JSON.stringify(config));
+                    
+                    applyTheme();
+                });
+            }
+        }
+        
+        // Configurar navegação entre páginas
+        function configurarNavegacao() {
+            const links = document.querySelectorAll('.sidebar-link');
+            const contents = document.querySelectorAll('.content');
+            
+            // Adicionar evento de clique a cada link
+            links.forEach(function(link) {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    
+                    // Obter ID da seção pelo atributo href
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById('content-' + targetId);
+                    
+                    if (targetElement) {
+                        // Esconder todos os conteúdos
+                        contents.forEach(function(content) {
+                            content.classList.add('hidden');
+                        });
+                        
+                        // Remover classe active de todos os links
+                        links.forEach(function(lnk) {
+                            lnk.classList.remove('active');
+                            lnk.classList.remove('bg-primary-100');
+                            lnk.classList.remove('dark:bg-primary-900');
+                            lnk.classList.remove('text-primary-700');
+                            lnk.classList.remove('dark:text-primary-300');
+                        });
+                        
+                        // Mostrar conteúdo alvo
+                        targetElement.classList.remove('hidden');
+                        
+                        // Adicionar classe active ao link clicado
+                        this.classList.add('active');
+                        this.classList.add('bg-primary-100');
+                        this.classList.add('dark:bg-primary-900');
+                        this.classList.add('text-primary-700');
+                        this.classList.add('dark:text-primary-300');
+                        
+                        // Atualizar título da página
+                        const pageTitle = document.getElementById('page-title');
+                        if (targetId === 'liberacoes') {
+                            pageTitle.textContent = 'Liberações';
+                        } else if (targetId === 'metas') {
+                            pageTitle.textContent = 'Metas de Colheita';
+                        } else if (targetId === 'configuracoes') {
+                            pageTitle.textContent = 'Configurações';
+                        }
+                        
+                        // Fechar menu lateral no móvel após selecionar
+                        document.getElementById('app-container').classList.remove('sidebar-open');
+                    }
+                });
+            });
+            
+            // Configurar navegação por hash na URL
+            function handleHashChange() {
+                const hash = window.location.hash.substring(1);
+                if (hash) {
+                    const link = document.querySelector(`.sidebar-link[href="#${hash}"]`);
+                    if (link) {
+                        link.click();
+                    }
+                }
+            }
+            
+            // Verificar hash inicial
+            handleHashChange();
+            
+            // Adicionar evento de mudança de hash
+            window.addEventListener('hashchange', handleHashChange);
+        }
+        
+        // Configurar menu lateral (mobile)
+        function configurarMenuLateral() {
+            const menuToggle = document.getElementById('mobile-menu-toggle');
+            const appContainer = document.getElementById('app-container');
+            
+            menuToggle.addEventListener('click', function() {
+                appContainer.classList.toggle('sidebar-open');
+            });
+            
+            // Fechar menu ao clicar fora (apenas em mobile)
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth <= 768 && 
+                    appContainer.classList.contains('sidebar-open') && 
+                    !event.target.closest('aside') && 
+                    !event.target.closest('#mobile-menu-toggle')) {
+                    appContainer.classList.remove('sidebar-open');
+                }
+            });
+        }
+        
+        // Atualizar data atual
+        function atualizarDataAtual() {
+            const currentDateElement = document.getElementById('current-date');
+            const date = new Date();
+            currentDateElement.textContent = date.toLocaleDateString('pt-BR');
+        }
+        
+        // *** FUNÇÕES PARA GERENCIAR LIBERAÇÕES ***
+        function inicializarLiberacoes() {
+            const formLiberacao = document.getElementById('form-liberacao');
+            const filtroFrente = document.getElementById('filtro-liberacao-frente');
+            const filtroFazenda = document.getElementById('filtro-liberacao-fazenda');
+            const btnExportLiberacoes = document.getElementById('btn-export-liberacoes');
+            
+            // Inicializar filtros e tabela
+            atualizarFiltrosLiberacoes();
+            atualizarTabelaLiberacoes();
+            
+            // Adicionar eventos aos filtros
+            if (filtroFrente) {
+                filtroFrente.addEventListener('change', function() {
+                    atualizarTabelaLiberacoes();
+                    atualizarResumoLiberacoes();
+                });
+            }
+            
+            if (filtroFazenda) {
+                filtroFazenda.addEventListener('change', function() {
+                    atualizarTabelaLiberacoes();
+                    atualizarResumoLiberacoes();
+                });
+            }
+            
+            // Atualizar resumo inicial
+            atualizarResumoLiberacoes();
+            
+            // Processar formulário de liberação
+            if (formLiberacao) {
+                formLiberacao.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    
+                    // Obter dados do formulário
+                    const liberacao = {
+                        frente: document.getElementById('liberacao-frente').value,
+                        fazenda: document.getElementById('liberacao-fazenda').value,
+                        numero: document.getElementById('liberacao-numero').value,
+                        previsto: document.getElementById('liberacao-previsto').value,
+                        realizado: document.getElementById('liberacao-realizado').value,
+                        data: document.getElementById('liberacao-data').value,
+                        observacoes: document.getElementById('liberacao-observacoes').value
+                    };
+                    
+                    try {
+                        // Calcular restante
+                        liberacao.restante = Number(liberacao.previsto) - Number(liberacao.realizado);
+                        
+                        // Verificar se é uma edição ou nova liberação
+                        const isEditing = formLiberacao.hasAttribute('data-editing');
+                        
+                        if (isEditing) {
+                            // Atualizar liberação existente
+                            const liberacaoId = formLiberacao.getAttribute('data-editing');
+                            liberacao.id = liberacaoId;
+                            
+                            DB.liberacoes.update(liberacao);
+                            Utils.exibirToast('Liberação atualizada com sucesso!', 'success');
+                        } else {
+                            // Adicionar nova liberação
+                            liberacao.id = 'LIB-' + Date.now();
+                            
+                            DB.liberacoes.add(liberacao);
+                            Utils.exibirToast('Liberação registrada com sucesso!', 'success');
+                        }
+                        
+                        // Resetar formulário
+                        formLiberacao.reset();
+                        formLiberacao.removeAttribute('data-editing');
+                        
+                        // Definir data para hoje
+                        document.getElementById('liberacao-data').value = new Date().toISOString().split('T')[0];
+                        
+                        // Atualizar tabela, filtros e resumo
+                        atualizarFiltrosLiberacoes();
+                        atualizarTabelaLiberacoes();
+                        atualizarResumoLiberacoes();
+                    } catch (error) {
+                        Utils.exibirToast(error.message, 'error');
+                    }
+                });
+                
+                // Definir data para hoje por padrão
+                document.getElementById('liberacao-data').value = new Date().toISOString().split('T')[0];
+            }
+            
+            // Exportar liberações
+            if (btnExportLiberacoes) {
+                btnExportLiberacoes.addEventListener('click', function() {
+                    // Obter filtros
+                    const filtroFrenteValue = filtroFrente ? filtroFrente.value : '';
+                    const filtroFazendaValue = filtroFazenda ? filtroFazenda.value : '';
+                    
+                    // Obter liberações filtradas
+                    let liberacoes = DB.liberacoes.getAll();
+                    
+                    if (filtroFrenteValue) {
+                        liberacoes = liberacoes.filter(l => l.frente === filtroFrenteValue);
+                    }
+                    
+                    if (filtroFazendaValue) {
+                        liberacoes = liberacoes.filter(l => l.fazenda === filtroFazendaValue);
+                    }
+                    
+                    // Ordenar por data (mais recente primeiro)
+                    const liberacoesOrdenadas = [...liberacoes].sort((a, b) => new Date(b.data) - new Date(a.data));
+                    
+                    // Formatar dados para exportação
+                    const dadosFormatados = liberacoesOrdenadas.map(liberacao => ({
+                        frente: liberacao.frente,
+                        fazenda: liberacao.fazenda,
+                        numero: liberacao.numero || '-',
+                        data: Utils.formatarData(liberacao.data),
+                        previsto: Utils.formatarToneladas(liberacao.previsto),
+                        realizado: Utils.formatarToneladas(liberacao.realizado),
+                        restante: Utils.formatarToneladas(liberacao.restante),
+                        progresso: ((Number(liberacao.realizado) / Number(liberacao.previsto)) * 100).toFixed(1) + '%',
+                        observacoes: liberacao.observacoes || '-'
+                    }));
+                    
+                    // Adicionar linha de totais
+                    const totals = DB.liberacoes.getTotals(filtroFrenteValue, filtroFazendaValue);
+                    dadosFormatados.push({
+                        frente: '--- TOTAIS ---',
+                        fazenda: '',
+                        numero: '',
+                        data: '',
+                        previsto: Utils.formatarToneladas(totals.previsto),
+                        realizado: Utils.formatarToneladas(totals.realizado),
+                        restante: Utils.formatarToneladas(totals.restante),
+                        progresso: totals.previsto > 0 ? ((totals.realizado / totals.previsto) * 100).toFixed(1) + '%' : '0%',
+                        observacoes: ''
+                    });
+                    
+                    // Definir colunas para o relatório
+                    const colunas = [
+                        { header: 'Frente', dataKey: 'frente' },
+                        { header: 'Fazenda', dataKey: 'fazenda' },
+                        { header: 'Nº Liberação', dataKey: 'numero' },
+                        { header: 'Data', dataKey: 'data' },
+                        { header: 'Previsto (T)', dataKey: 'previsto' },
+                        { header: 'Realizado (T)', dataKey: 'realizado' },
+                        { header: 'Restante (T)', dataKey: 'restante' },
+                        { header: 'Progresso', dataKey: 'progresso' }
+                    ];
+                    
+                    // Exportar para PDF
+                    Utils.exportarPDF(
+                        'Relatório de Liberações',
+                        dadosFormatados,
+                        colunas,
+                        'liberacoes.pdf'
+                    );
+                });
+            }
+        }
+        
+        // Atualizar filtros de liberações
+        function atualizarFiltrosLiberacoes() {
+            const filtroFrente = document.getElementById('filtro-liberacao-frente');
+            const filtroFazenda = document.getElementById('filtro-liberacao-fazenda');
+            
+            if (!filtroFrente || !filtroFazenda) return;
+            
+            // Obter valores únicos
+            const valores = DB.liberacoes.getUniqueValues();
+            
+            // Salvar valores selecionados
+            const frenteSelecionada = filtroFrente.value;
+            const fazendaSelecionada = filtroFazenda.value;
+            
+            // Atualizar opções de frente
+            filtroFrente.innerHTML = '<option value="">Todas</option>';
+            valores.frentes.forEach(frente => {
+                const option = document.createElement('option');
+                option.value = frente;
+                option.textContent = frente;
+                filtroFrente.appendChild(option);
+            });
+            
+            // Atualizar opções de fazenda
+            filtroFazenda.innerHTML = '<option value="">Todas</option>';
+            valores.fazendas.forEach(fazenda => {
+                const option = document.createElement('option');
+                option.value = fazenda;
+                option.textContent = fazenda;
+                filtroFazenda.appendChild(option);
+            });
+            
+            // Restaurar valores selecionados se ainda existirem
+            if (frenteSelecionada && valores.frentes.includes(frenteSelecionada)) {
+                filtroFrente.value = frenteSelecionada;
+            }
+            
+            if (fazendaSelecionada && valores.fazendas.includes(fazendaSelecionada)) {
+                filtroFazenda.value = fazendaSelecionada;
+            }
+        }
+        
+        // Atualizar resumo de liberações
+        function atualizarResumoLiberacoes() {
+            // Obter filtros
+            const filtroFrente = document.getElementById('filtro-liberacao-frente');
+            const filtroFazenda = document.getElementById('filtro-liberacao-fazenda');
+            
+            const filtroFrenteValue = filtroFrente ? filtroFrente.value : '';
+            const filtroFazendaValue = filtroFazenda ? filtroFazenda.value : '';
+            
+            // Obter totais
+            const totals = DB.liberacoes.getTotals(filtroFrenteValue, filtroFazendaValue);
+            
+            // Atualizar elementos
+            document.getElementById('resumo-total-previsto').textContent = Utils.formatarToneladas(totals.previsto);
+            document.getElementById('resumo-total-realizado').textContent = Utils.formatarToneladas(totals.realizado);
+            document.getElementById('resumo-total-restante').textContent = Utils.formatarToneladas(totals.restante);
+        }
+        
+        // Atualizar tabela de liberações
+        function atualizarTabelaLiberacoes() {
+            const tabelaElement = document.getElementById('tabela-liberacoes');
+            if (!tabelaElement) return;
+            
+            // Obter filtros
+            const filtroFrente = document.getElementById('filtro-liberacao-frente');
+            const filtroFazenda = document.getElementById('filtro-liberacao-fazenda');
+            
+            const filtroFrenteValue = filtroFrente ? filtroFrente.value : '';
+            const filtroFazendaValue = filtroFazenda ? filtroFazenda.value : '';
+            
+            // Obter liberações
+            let liberacoes = DB.liberacoes.getAll();
+            
+            // Aplicar filtros
+            if (filtroFrenteValue) {
+                liberacoes = liberacoes.filter(l => l.frente === filtroFrenteValue);
+            }
+            
+            if (filtroFazendaValue) {
+                liberacoes = liberacoes.filter(l => l.fazenda === filtroFazendaValue);
+            }
+            
+            // Limpar tabela
+            tabelaElement.innerHTML = '';
+            
+            if (liberacoes.length === 0) {
+                tabelaElement.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
+                            Nenhuma liberação encontrada
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Ordenar por data (mais recente primeiro)
+            const liberacoesOrdenadas = [...liberacoes].sort((a, b) => new Date(b.data) - new Date(a.data));
+            
+            // Adicionar cada liberação
+            liberacoesOrdenadas.forEach(liberacao => {
+                // Calcular progresso
+                const progresso = Number(liberacao.previsto) > 0 ? 
+                    (Number(liberacao.realizado) / Number(liberacao.previsto)) * 100 : 0;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-4 py-3 text-gray-700 dark:text-gray-300">${liberacao.frente}</td>
+                    <td class="px-4 py-3 text-gray-700 dark:text-gray-300">${liberacao.fazenda}</td>
+                    <td class="px-4 py-3 text-gray-700 dark:text-gray-300">${liberacao.numero || '-'}</td>
+                    <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300">${Utils.formatarToneladas(liberacao.previsto)}</td>
+                    <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300">${Utils.formatarToneladas(liberacao.realizado)}</td>
+                    <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300">${Utils.formatarToneladas(liberacao.restante)}</td>
+                    <td class="px-4 py-3 text-center">
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                            <div class="bg-primary-600 h-2.5 rounded-full" style="width: ${progresso}%"></div>
+                        </div>
+                        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">${progresso.toFixed(1)}%</span>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <button class="btn-edit-liberacao text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200 p-1 mr-1" data-id="${liberacao.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-delete-liberacao text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 p-1" data-id="${liberacao.id}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tabelaElement.appendChild(row);
+            });
+            
+            // Adicionar eventos aos botões
+            document.querySelectorAll('.btn-edit-liberacao').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    editarLiberacao(id);
+                });
+            });
+            
+            document.querySelectorAll('.btn-delete-liberacao').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    excluirLiberacao(id);
+                });
+            });
+        }
+        
+        // Editar liberação
+        function editarLiberacao(id) {
+            try {
+                const liberacao = DB.liberacoes.get(id);
+                if (!liberacao) {
+                    Utils.exibirToast('Liberação não encontrada', 'error');
+                    return;
+                }
+                
+                // Preencher formulário
+                document.getElementById('liberacao-frente').value = liberacao.frente || '';
+                document.getElementById('liberacao-fazenda').value = liberacao.fazenda || '';
+                document.getElementById('liberacao-numero').value = liberacao.numero || '';
+                document.getElementById('liberacao-previsto').value = liberacao.previsto || '';
+                document.getElementById('liberacao-realizado').value = liberacao.realizado || '';
+                document.getElementById('liberacao-data').value = liberacao.data || '';
+                document.getElementById('liberacao-observacoes').value = liberacao.observacoes || '';
+                
+                // Marcar formulário como edição
+                document.getElementById('form-liberacao').setAttribute('data-editing', id);
+                
+                // Scroll para o formulário
+                document.getElementById('liberacao-frente').scrollIntoView({ behavior: 'smooth' });
+                document.getElementById('liberacao-frente').focus();
+            } catch (error) {
+                Utils.exibirToast(error.message, 'error');
+            }
+        }
+        
+        // Excluir liberação
+        function excluirLiberacao(id) {
+            try {
+                // Confirmar exclusão
+                if (!confirm('Tem certeza que deseja excluir esta liberação?')) {
+                    return;
+                }
+                
+                // Tentar excluir
+                DB.liberacoes.remove(id);
+                
+                // Atualizar tabela, filtros e resumo
+                atualizarFiltrosLiberacoes();
+                atualizarTabelaLiberacoes();
+                atualizarResumoLiberacoes();
+                
+                Utils.exibirToast('Liberação excluída com sucesso!', 'success');
+            } catch (error) {
+                Utils.exibirToast(error.message, 'error');
+            }
+        }
+
+        // *** FUNÇÕES PARA GERENCIAR METAS ***
+        function inicializarMetas() {
+            // Configurar abas de metas
+            configurarAbasMetas();
+            
+            // Inicializar cada aba
+            inicializarFrentes();
+            inicializarMetasAba();
+            inicializarLancamentoDiario();
+            inicializarAcompanhamento();
+        }
+
+        // Configurar navegação entre abas de metas
+        function configurarAbasMetas() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetTab = this.getAttribute('data-tab');
+                    
+                    // Remover classe active de todos os botões
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('active', 'border-primary-500', 'text-primary-600', 'dark:text-primary-400');
+                        btn.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+                    });
+                    
+                    // Adicionar classe active ao botão clicado
+                    this.classList.add('active', 'border-primary-500', 'text-primary-600', 'dark:text-primary-400');
+                    this.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+                    
+                    // Esconder todos os conteúdos das abas
+                    tabContents.forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    
+                    // Mostrar conteúdo da aba selecionada
+                    const targetContent = document.getElementById(`tab-${targetTab}`);
+                    if (targetContent) {
+                        targetContent.classList.remove('hidden');
+                        
+                        // Atualizar dados conforme a aba
+                        if (targetTab === 'frentes') {
+                            atualizarTabelaFrente();
+                        } else if (targetTab === 'metas') {
+                            atualizarSelectFrente();
+                            atualizarTabelaMeta();
+                        } else if (targetTab === 'diario') {
+                            atualizarSelectFrenteLancamento();
+                            atualizarTabelaLancamento();
+                            // Definir data para hoje
+                            document.getElementById('lancamento-data').value = new Date().toISOString().split('T')[0];
+                        } else if (targetTab === 'acompanhamento') {
+                            atualizarSelectFrenteAcompanhamento();
+                            atualizarAcompanhamento();
+                        }
+                    }
+                });
+            });
+            
+            // Ativar primeira aba por padrão
+            document.querySelector('.tab-button[data-tab="frentes"]').click();
+        }
+
+        // Inicializar funcionalidades de frentes
+        function inicializarFrentes() {
+            const formFrente = document.getElementById('form-frente');
+            
+            if (formFrente) {
+                formFrente.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    
+                    const frente = {
+                        nome: document.getElementById('frente-nome').value,
+                        fazenda: document.getElementById('frente-fazenda').value,
+                        responsavel: document.getElementById('frente-responsavel').value,
+                        status: document.getElementById('frente-status').value,
+                        observacoes: document.getElementById('frente-observacoes').value
+                    };
+                    
+                    try {
+                        const isEditing = formFrente.hasAttribute('data-editing');
+                        
+                        if (isEditing) {
+                            const frenteId = formFrente.getAttribute('data-editing');
+                            frente.id = frenteId;
+                            DB.frentes.update(frente);
+                            Utils.exibirToast('Frente atualizada com sucesso!', 'success');
+                        } else {
+                            frente.id = Utils.gerarId('FRENTE');
+                            DB.frentes.add(frente);
+                            Utils.exibirToast('Frente cadastrada com sucesso!', 'success');
+                        }
+                        
+                        formFrente.reset();
+                        formFrente.removeAttribute('data-editing');
+                        atualizarTabelaFrente();
+                    } catch (error) {
+                        Utils.exibirToast(error.message, 'error');
+                    }
+                });
+            }
+        }
+
+        // Atualizar tabela de frentes
+        function atualizarTabelaFrente() {
+            const tabelaElement = document.getElementById('tabela-frentes');
+            if (!tabelaElement) return;
+            
+            const frentes = DB.frentes.getAll();
+            tabelaElement.innerHTML = '';
+            
+            if (frentes.length === 0) {
+                tabelaElement.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-3 py-2 text-center text-gray-500 dark:text-gray-400">
+                            Nenhuma frente cadastrada
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            frentes.forEach(frente => {
+                const statusColor = frente.status === 'ativa' ? 'green' : 
+                                    frente.status === 'inativa' ? 'red' : 'yellow';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-3 py-2 text-gray-700 dark:text-gray-300">${frente.nome}</td>
+                    <td class="px-3 py-2 text-gray-700 dark:text-gray-300">${frente.fazenda}</td>
+                    <td class="px-3 py-2 text-center">
+                        <span class="px-2 py-1 rounded text-xs font-medium bg-${statusColor}-100 dark:bg-${statusColor}-800 text-${statusColor}-700 dark:text-${statusColor}-300">
+                            ${frente.status}
+                        </span>
+                    </td>
+                    <td class="px-3 py-2 text-center">
+                        <button class="btn-edit-frente text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200 p-1 mr-1" data-id="${frente.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-delete-frente text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 p-1" data-id="${frente.id}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tabelaElement.appendChild(row);
+            });
+            
+            // Adicionar eventos aos botões
+            document.querySelectorAll('.btn-edit-frente').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    editarFrente(id);
+                });
+            });
+            
+            document.querySelectorAll('.btn-delete-frente').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    excluirFrente(id);
+                });
+            });
+        }
+
+        // Editar frente
+        function editarFrente(id) {
+            try {
+                const frente = DB.frentes.get(id);
+                if (!frente) {
+                    Utils.exibirToast('Frente não encontrada', 'error');
+                    return;
+                }
+                
+                document.getElementById('frente-nome').value = frente.nome || '';
+                document.getElementById('frente-fazenda').value = frente.fazenda || '';
+                document.getElementById('frente-responsavel').value = frente.responsavel || '';
+                document.getElementById('frente-status').value = frente.status || 'ativa';
+                document.getElementById('frente-observacoes').value = frente.observacoes || '';
+                
+                document.getElementById('form-frente').setAttribute('data-editing', id);
+                document.getElementById('frente-nome').focus();
+            } catch (error) {
+                Utils.exibirToast(error.message, 'error');
+            }
+        }
+
+        // Excluir frente
+        function excluirFrente(id) {
+            try {
+                if (!confirm('Tem certeza que deseja excluir esta frente?')) {
+                    return;
+                }
+                
+                DB.frentes.remove(id);
+                atualizarTabelaFrente();
+                Utils.exibirToast('Frente excluída com sucesso!', 'success');
+            } catch (error) {
+                Utils.exibirToast(error.message, 'error');
+            }
+        }
+
+        // Inicializar funcionalidades de metas
+        function inicializarMetasAba() {
+            const formMeta = document.getElementById('form-meta');
+            
+            if (formMeta) {
+                formMeta.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    
+                    const meta = {
+                        frenteId: document.getElementById('meta-frente').value,
+                        periodo: document.getElementById('meta-periodo').value,
+                        valor: document.getElementById('meta-valor').value,
+                        dataInicio: document.getElementById('meta-data-inicio').value,
+                        dataFim: document.getElementById('meta-data-fim').value,
+                        observacoes: document.getElementById('meta-observacoes').value
+                    };
+                    
+                    try {
+                        const isEditing = formMeta.hasAttribute('data-editing');
+                        
+                        if (isEditing) {
+                            const metaId = formMeta.getAttribute('data-editing');
+                            meta.id = metaId;
+                            DB.metas.update(meta);
+                            Utils.exibirToast('Meta atualizada com sucesso!', 'success');
+                        } else {
+                            meta.id = Utils.gerarId('META');
+                            DB.metas.add(meta);
+                            Utils.exibirToast('Meta definida com sucesso!', 'success');
+                        }
+                        
+                        formMeta.reset();
+                        formMeta.removeAttribute('data-editing');
+                        atualizarTabelaMeta();
+                    } catch (error) {
+                        Utils.exibirToast(error.message, 'error');
+                    }
+                });
+            }
+        }
+
+        // Atualizar select de frentes para metas
+        function atualizarSelectFrente() {
+            const select = document.getElementById('meta-frente');
+            if (!select) return;
+            
+            const frentesAtivas = DB.frentes.getAtivas();
+            const metaSelecionada = select.value;
+            
+            select.innerHTML = '<option value="">Selecione uma frente</option>';
+            frentesAtivas.forEach(frente => {
+                const option = document.createElement('option');
+                option.value = frente.id;
+                option.textContent = `${frente.nome} - ${frente.fazenda}`;
+                select.appendChild(option);
+            });
+            
+            if (metaSelecionada) {
+                select.value = metaSelecionada;
+            }
+        }
+
+        // Atualizar tabela de metas
+        function atualizarTabelaMeta() {
+            const tabelaElement = document.getElementById('tabela-metas');
+            if (!tabelaElement) return;
+            
+            const metas = DB.metas.getAll();
+            tabelaElement.innerHTML = '';
+            
+            if (metas.length === 0) {
+                tabelaElement.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-3 py-2 text-center text-gray-500 dark:text-gray-400">
+                            Nenhuma meta definida
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            metas.forEach(meta => {
+                const frente = DB.frentes.get(meta.frenteId);
+                const frenteNome = frente ? frente.nome : 'Frente não encontrada';
+                
+                // Verificar se meta está ativa
+                const hoje = new Date().toISOString().split('T')[0];
+                const isAtiva = meta.dataInicio <= hoje && meta.dataFim >= hoje;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-3 py-2 text-gray-700 dark:text-gray-300">${frenteNome}</td>
+                    <td class="px-3 py-2 text-gray-700 dark:text-gray-300">${meta.periodo}</td>
+                    <td class="px-3 py-2 text-right text-gray-700 dark:text-gray-300">${Utils.formatarToneladas(meta.valor)}</td>
+                    <td class="px-3 py-2 text-center">
+                        <span class="px-2 py-1 rounded text-xs font-medium ${isAtiva ? 'bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'}">
+                            ${isAtiva ? 'Ativa' : 'Inativa'}
+                        </span>
+                    </td>
+                    <td class="px-3 py-2 text-center">
+                        <button class="btn-edit-meta text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200 p-1 mr-1" data-id="${meta.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-delete-meta text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 p-1" data-id="${meta.id}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tabelaElement.appendChild(row);
+            });
+            
+            // Adicionar eventos aos botões
+            document.querySelectorAll('.btn-edit-meta').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    editarMeta(id);
+                });
+            });
+            
+            document.querySelectorAll('.btn-delete-meta').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    excluirMeta(id);
+                });
+            });
+        }
+
+        // Editar meta
+        function editarMeta(id) {
+            try {
+                const meta = DB.metas.get(id);
+                if (!meta) {
+                    Utils.exibirToast('Meta não encontrada', 'error');
+                    return;
+                }
+                
+                document.getElementById('meta-frente').value = meta.frenteId || '';
+                document.getElementById('meta-periodo').value = meta.periodo || 'diario';
+                document.getElementById('meta-valor').value = meta.valor || '';
+                document.getElementById('meta-data-inicio').value = meta.dataInicio || '';
+                document.getElementById('meta-data-fim').value = meta.dataFim || '';
+                document.getElementById('meta-observacoes').value = meta.observacoes || '';
+                
+                document.getElementById('form-meta').setAttribute('data-editing', id);
+                document.getElementById('meta-valor').focus();
+            } catch (error) {
+                Utils.exibirToast(error.message, 'error');
+            }
+        }
+
+        // Excluir meta
+        function excluirMeta(id) {
+            try {
+                if (!confirm('Tem certeza que deseja excluir esta meta?')) {
+                    return;
+                }
+                
+                DB.metas.remove(id);
+                atualizarTabelaMeta();
+                Utils.exibirToast('Meta excluída com sucesso!', 'success');
+            } catch (error) {
+                Utils.exibirToast(error.message, 'error');
+            }
+        }
+
+        // Inicializar funcionalidades de lançamento diário
+        function inicializarLancamentoDiario() {
+            const formLancamento = document.getElementById('form-lancamento');
+            
+            if (formLancamento) {
+                formLancamento.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    
+                    const lancamento = {
+                        frenteId: document.getElementById('lancamento-frente').value,
+                        data: document.getElementById('lancamento-data').value,
+                        colhido: document.getElementById('lancamento-colhido').value,
+                        turno: document.getElementById('lancamento-turno').value,
+                        operador: document.getElementById('lancamento-operador').value,
+                        observacoes: document.getElementById('lancamento-observacoes').value
+                    };
+                    
+                    try {
+                        const isEditing = formLancamento.hasAttribute('data-editing');
+                        
+                        if (isEditing) {
+                            const lancamentoId = formLancamento.getAttribute('data-editing');
+                            lancamento.id = lancamentoId;
+                            DB.lancamentos.update(lancamento);
+                            Utils.exibirToast('Lançamento atualizado com sucesso!', 'success');
+                        } else {
+                            lancamento.id = Utils.gerarId('LANC');
+                            DB.lancamentos.add(lancamento);
+                            Utils.exibirToast('Lançamento registrado com sucesso!', 'success');
+                        }
+                        
+                        formLancamento.reset();
+                        formLancamento.removeAttribute('data-editing');
+                        
+                        // Definir data para hoje novamente
+                        document.getElementById('lancamento-data').value = new Date().toISOString().split('T')[0];
+                        
+                        atualizarTabelaLancamento();
+                    } catch (error) {
+                        Utils.exibirToast(error.message, 'error');
+                    }
+                });
+            }
+        }
+
+        // Atualizar select de frentes para lançamentos
+        function atualizarSelectFrenteLancamento() {
+            const select = document.getElementById('lancamento-frente');
+            if (!select) return;
+            
+            const frentesAtivas = DB.frentes.getAtivas();
+            const lancamentoSelecionado = select.value;
+            
+            select.innerHTML = '<option value="">Selecione uma frente</option>';
+            frentesAtivas.forEach(frente => {
+                const option = document.createElement('option');
+                option.value = frente.id;
+                option.textContent = `${frente.nome} - ${frente.fazenda}`;
+                select.appendChild(option);
+            });
+            
+            if (lancamentoSelecionado) {
+                select.value = lancamentoSelecionado;
+            }
+        }
+
+        // Atualizar tabela de lançamentos
+        function atualizarTabelaLancamento() {
+            const tabelaElement = document.getElementById('tabela-lancamentos');
+            if (!tabelaElement) return;
+            
+            const lancamentos = DB.lancamentos.getAll();
+            tabelaElement.innerHTML = '';
+            
+            if (lancamentos.length === 0) {
+                tabelaElement.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-3 py-2 text-center text-gray-500 dark:text-gray-400">
+                            Nenhum lançamento registrado
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Ordenar por data (mais recente primeiro)
+            const lancamentosOrdenados = [...lancamentos].sort((a, b) => new Date(b.data) - new Date(a.data));
+            
+            // Mostrar apenas os 10 mais recentes
+            lancamentosOrdenados.slice(0, 10).forEach(lancamento => {
+                const frente = DB.frentes.get(lancamento.frenteId);
+                const frenteNome = frente ? frente.nome : 'Frente não encontrada';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-3 py-2 text-gray-700 dark:text-gray-300">${Utils.formatarData(lancamento.data)}</td>
+                    <td class="px-3 py-2 text-gray-700 dark:text-gray-300">${frenteNome}</td>
+                    <td class="px-3 py-2 text-right text-gray-700 dark:text-gray-300">${Utils.formatarToneladas(lancamento.colhido)}</td>
+                    <td class="px-3 py-2 text-center text-gray-700 dark:text-gray-300">${lancamento.turno}</td>
+                    <td class="px-3 py-2 text-center">
+                        <button class="btn-edit-lancamento text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200 p-1 mr-1" data-id="${lancamento.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-delete-lancamento text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 p-1" data-id="${lancamento.id}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tabelaElement.appendChild(row);
+            });
+            
+            // Adicionar eventos aos botões
+            document.querySelectorAll('.btn-edit-lancamento').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    editarLancamento(id);
+                });
+            });
+            
+            document.querySelectorAll('.btn-delete-lancamento').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    excluirLancamento(id);
+                });
+            });
+        }
+
+        // Editar lançamento
+        function editarLancamento(id) {
+            try {
+                const lancamento = DB.lancamentos.get(id);
+                if (!lancamento) {
+                    Utils.exibirToast('Lançamento não encontrado', 'error');
+                    return;
+                }
+                
+                document.getElementById('lancamento-frente').value = lancamento.frenteId || '';
+                document.getElementById('lancamento-data').value = lancamento.data || '';
+                document.getElementById('lancamento-colhido').value = lancamento.colhido || '';
+                document.getElementById('lancamento-turno').value = lancamento.turno || 'manha';
+                document.getElementById('lancamento-operador').value = lancamento.operador || '';
+                document.getElementById('lancamento-observacoes').value = lancamento.observacoes || '';
+                
+                document.getElementById('form-lancamento').setAttribute('data-editing', id);
+                document.getElementById('lancamento-colhido').focus();
+            } catch (error) {
+                Utils.exibirToast(error.message, 'error');
+            }
+        }
+
+        // Excluir lançamento
+        function excluirLancamento(id) {
+            try {
+                if (!confirm('Tem certeza que deseja excluir este lançamento?')) {
+                    return;
+                }
+                
+                DB.lancamentos.remove(id);
+                atualizarTabelaLancamento();
+                Utils.exibirToast('Lançamento excluído com sucesso!', 'success');
+            } catch (error) {
+                Utils.exibirToast(error.message, 'error');
+            }
+        }
+
+        // Inicializar funcionalidades de acompanhamento
+        function inicializarAcompanhamento() {
+            const btnAplicarFiltro = document.getElementById('btn-aplicar-filtro-acompanhamento');
+            const btnExportarAcompanhamento = document.getElementById('btn-exportar-acompanhamento');
+            
+            if (btnAplicarFiltro) {
+                btnAplicarFiltro.addEventListener('click', function() {
+                    atualizarAcompanhamento();
+                });
+            }
+            
+            if (btnExportarAcompanhamento) {
+                btnExportarAcompanhamento.addEventListener('click', function() {
+                    exportarRelatorioAcompanhamento();
+                });
+            }
+            
+            // Definir datas padrão (últimos 30 dias)
+            const hoje = new Date();
+            const inicioMes = new Date();
+            inicioMes.setDate(1);
+            
+            document.getElementById('filtro-acompanhamento-data-inicio').value = inicioMes.toISOString().split('T')[0];
+            document.getElementById('filtro-acompanhamento-data-fim').value = hoje.toISOString().split('T')[0];
+        }
+
+        // Atualizar select de frentes para acompanhamento
+        function atualizarSelectFrenteAcompanhamento() {
+            const select = document.getElementById('filtro-acompanhamento-frente');
+            if (!select) return;
+            
+            const frentes = DB.frentes.getAll();
+            const frenteSelecionada = select.value;
+            
+            select.innerHTML = '<option value="">Todas as frentes</option>';
+            frentes.forEach(frente => {
+                const option = document.createElement('option');
+                option.value = frente.id;
+                option.textContent = `${frente.nome} - ${frente.fazenda}`;
+                select.appendChild(option);
+            });
+            
+            if (frenteSelecionada) {
+                select.value = frenteSelecionada;
+            }
+        }
+
+        // Atualizar acompanhamento
+        function atualizarAcompanhamento() {
+            const filtroFrente = document.getElementById('filtro-acompanhamento-frente').value;
+            const dataInicio = document.getElementById('filtro-acompanhamento-data-inicio').value;
+            const dataFim = document.getElementById('filtro-acompanhamento-data-fim').value;
+            
+            // Atualizar resumo
+            atualizarResumoAcompanhamento(filtroFrente, dataInicio, dataFim);
+            
+            // Atualizar tabela
+            atualizarTabelaAcompanhamento(filtroFrente, dataInicio, dataFim);
+        }
+
+        // Atualizar resumo de acompanhamento
+        function atualizarResumoAcompanhamento(filtroFrente, dataInicio, dataFim) {
+            let frentes = DB.frentes.getAll();
+            let metas = DB.metas.getAll();
+            let lancamentos = DB.lancamentos.getAll();
+            
+            // Aplicar filtros
+            if (filtroFrente) {
+                frentes = frentes.filter(f => f.id === filtroFrente);
+                metas = metas.filter(m => m.frenteId === filtroFrente);
+                lancamentos = lancamentos.filter(l => l.frenteId === filtroFrente);
+            }
+            
+            if (dataInicio && dataFim) {
+                // Filtrar metas que se sobrepõem ao período
+                metas = metas.filter(m => 
+                    (m.dataInicio <= dataFim && m.dataFim >= dataInicio)
+                );
+                
+                // Filtrar lançamentos no período
+                lancamentos = lancamentos.filter(l => 
+                    l.data >= dataInicio && l.data <= dataFim
+                );
+            }
+            
+            // Calcular totais
+            const totalMetas = metas.length;
+            const totalColhido = lancamentos.reduce((sum, l) => sum + Number(l.colhido), 0);
+            const totalMeta = metas.reduce((sum, m) => sum + Number(m.valor), 0);
+            const percentualMeta = totalMeta > 0 ? (totalColhido / totalMeta) * 100 : 0;
+            
+            // Atualizar elementos
+            document.getElementById('resumo-total-metas').textContent = totalMetas;
+            document.getElementById('resumo-total-colhido').textContent = Utils.formatarToneladas(totalColhido);
+            document.getElementById('resumo-total-meta').textContent = Utils.formatarToneladas(totalMeta);
+            document.getElementById('resumo-percentual-meta').textContent = percentualMeta.toFixed(1) + '%';
+        }
+
+        // Atualizar tabela de acompanhamento
+        function atualizarTabelaAcompanhamento(filtroFrente, dataInicio, dataFim) {
+            const tabelaElement = document.getElementById('tabela-acompanhamento');
+            if (!tabelaElement) return;
+            
+            let frentes = DB.frentes.getAll();
+            
+            // Aplicar filtro de frente
+            if (filtroFrente) {
+                frentes = frentes.filter(f => f.id === filtroFrente);
+            }
+            
+            tabelaElement.innerHTML = '';
+            
+            if (frentes.length === 0) {
+                tabelaElement.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
+                            Nenhuma frente encontrada
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            frentes.forEach(frente => {
+                // Obter metas da frente no período
+                let metas = DB.metas.getAll().filter(m => m.frenteId === frente.id);
+                
+                if (dataInicio && dataFim) {
+                    metas = metas.filter(m => 
+                        (m.dataInicio <= dataFim && m.dataFim >= dataInicio)
+                    );
+                }
+                
+                // Obter lançamentos da frente no período
+                let lancamentos = DB.lancamentos.getAll().filter(l => l.frenteId === frente.id);
+                
+                if (dataInicio && dataFim) {
+                    lancamentos = lancamentos.filter(l => 
+                        l.data >= dataInicio && l.data <= dataFim
+                    );
+                }
+                
+                // Calcular totais
+                const totalMeta = metas.reduce((sum, m) => sum + Number(m.valor), 0);
+                const totalColhido = lancamentos.reduce((sum, l) => sum + Number(l.colhido), 0);
+                const restante = totalMeta - totalColhido;
+                const percentualMeta = totalMeta > 0 ? (totalColhido / totalMeta) * 100 : 0;
+                
+                // Determinar status
+                const status = Utils.getStatusMeta(percentualMeta);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-4 py-3 text-gray-700 dark:text-gray-300">${frente.nome}</td>
+                    <td class="px-4 py-3 text-center text-gray-700 dark:text-gray-300">${Utils.formatarToneladas(totalMeta)}</td>
+                    <td class="px-4 py-3 text-center text-gray-700 dark:text-gray-300">${Utils.formatarToneladas(totalColhido)}</td>
+                    <td class="px-4 py-3 text-center text-gray-700 dark:text-gray-300">${Utils.formatarToneladas(restante)}</td>
+                    <td class="px-4 py-3 text-center text-gray-700 dark:text-gray-300">${percentualMeta.toFixed(1)}%</td>
+                    <td class="px-4 py-3 text-center">
+                        <span class="px-2 py-1 rounded text-xs font-medium bg-${status.cor}-100 dark:bg-${status.cor}-800 text-${status.cor}-700 dark:text-${status.cor}-300">
+                            ${status.texto}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                            <div class="bg-${status.cor}-600 h-2.5 rounded-full" style="width: ${Math.min(percentualMeta, 100)}%"></div>
+                        </div>
+                    </td>
+                `;
+                
+                tabelaElement.appendChild(row);
+            });
+        }
+
+        // Exportar relatório de acompanhamento
+        function exportarRelatorioAcompanhamento() {
+            const filtroFrente = document.getElementById('filtro-acompanhamento-frente').value;
+            const dataInicio = document.getElementById('filtro-acompanhamento-data-inicio').value;
+            const dataFim = document.getElementById('filtro-acompanhamento-data-fim').value;
+            
+            let frentes = DB.frentes.getAll();
+            
+            // Aplicar filtro de frente
+            if (filtroFrente) {
+                frentes = frentes.filter(f => f.id === filtroFrente);
+            }
+            
+            const dadosFormatados = [];
+            
+            frentes.forEach(frente => {
+                // Obter metas da frente no período
+                let metas = DB.metas.getAll().filter(m => m.frenteId === frente.id);
+                
+                if (dataInicio && dataFim) {
+                    metas = metas.filter(m => 
+                        (m.dataInicio <= dataFim && m.dataFim >= dataInicio)
+                    );
+                }
+                
+                // Obter lançamentos da frente no período
+                let lancamentos = DB.lancamentos.getAll().filter(l => l.frenteId === frente.id);
+                
+                if (dataInicio && dataFim) {
+                    lancamentos = lancamentos.filter(l => 
+                        l.data >= dataInicio && l.data <= dataFim
+                    );
+                }
+                
+                // Calcular totais
+                const totalMeta = metas.reduce((sum, m) => sum + Number(m.valor), 0);
+                const totalColhido = lancamentos.reduce((sum, l) => sum + Number(l.colhido), 0);
+                const restante = totalMeta - totalColhido;
+                const percentualMeta = totalMeta > 0 ? (totalColhido / totalMeta) * 100 : 0;
+                const status = Utils.getStatusMeta(percentualMeta);
+                
+                dadosFormatados.push({
+                    frente: frente.nome,
+                    fazenda: frente.fazenda,
+                    meta: Utils.formatarToneladas(totalMeta),
+                    colhido: Utils.formatarToneladas(totalColhido),
+                    restante: Utils.formatarToneladas(restante),
+                    percentual: percentualMeta.toFixed(1) + '%',
+                    status: status.texto
+                });
+            });
+            
+            // Definir colunas para o relatório
+            const colunas = [
+                { header: 'Frente', dataKey: 'frente' },
+                { header: 'Fazenda', dataKey: 'fazenda' },
+                { header: 'Meta (T)', dataKey: 'meta' },
+                { header: 'Colhido (T)', dataKey: 'colhido' },
+                { header: 'Restante (T)', dataKey: 'restante' },
+                { header: '% Meta', dataKey: 'percentual' },
+                { header: 'Status', dataKey: 'status' }
+            ];
+            
+            const periodo = dataInicio && dataFim ? 
+                ` - Período: ${Utils.formatarData(dataInicio)} a ${Utils.formatarData(dataFim)}` : 
+                '';
+            
+            // Exportar para PDF
+            Utils.exportarPDF(
+                `Relatório de Acompanhamento de Metas${periodo}`,
+                dadosFormatados,
+                colunas,
+                'acompanhamento_metas.pdf'
+            );
+        }
+        
+        // *** FUNÇÕES PARA GERENCIAR CONFIGURAÇÕES ***
+        function inicializarConfiguracoes() {
+            // Exportar JSON
+            document.getElementById('btn-exportar-json')?.addEventListener('click', function() {
+                try {
+                    const dados = DB.exportData();
+                    
+                    // Criar blob e download
+                    const blob = new Blob([dados], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const link = document.createElement('a');
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', 'ggomes-log_backup_' + new Date().toISOString().split('T')[0] + '.json');
+                    link.style.display = 'none';
+                    
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    Utils.exibirToast('Backup exportado com sucesso!', 'success');
+                } catch (error) {
+                    Utils.exibirToast('Erro ao exportar backup: ' + error.message, 'error');
+                }
+            });
+            
+            // Importar JSON
+            document.getElementById('btn-importar-json')?.addEventListener('click', function() {
+                document.getElementById('import-json-file').click();
+            });
+            
+            document.getElementById('import-json-file')?.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const jsonData = e.target.result;
+                        DB.importData(jsonData);
+                        Utils.exibirToast('Backup importado com sucesso! A página será recarregada.', 'success');
+                        
+                        // Recarregar a página após um breve delay
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
+                    } catch (error) {
+                        Utils.exibirToast('Erro ao importar backup: ' + error.message, 'error');
+                    }
+                };
+                
+                reader.readAsText(file);
+            });
+            
+            // Limpar dados
+            document.getElementById('btn-limpar-dados')?.addEventListener('click', function() {
+                document.getElementById('modal-limpar-dados').classList.remove('hidden');
+            });
+            
+            // Modal de confirmação
+            document.getElementById('btn-cancelar-limpar')?.addEventListener('click', function() {
+                document.getElementById('modal-limpar-dados').classList.add('hidden');
+                document.getElementById('confirmacao-texto').value = '';
+                document.getElementById('btn-confirmar-limpar').disabled = true;
+                document.getElementById('btn-confirmar-limpar').classList.add('opacity-50', 'cursor-not-allowed');
+            });
+            
+            document.getElementById('confirmacao-texto')?.addEventListener('input', function() {
+                const confirmButton = document.getElementById('btn-confirmar-limpar');
+                
+                if (this.value === 'CONFIRMAR') {
+                    confirmButton.disabled = false;
+                    confirmButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    confirmButton.disabled = true;
+                    confirmButton.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            });
+            
+            document.getElementById('btn-confirmar-limpar')?.addEventListener('click', function() {
+                try {
+                    DB.clearAll();
+                    
+                    document.getElementById('modal-limpar-dados').classList.add('hidden');
+                    Utils.exibirToast('Todos os dados foram limpos com sucesso! A página será recarregada.', 'success');
+                    
+                    // Recarregar a página após um breve delay
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } catch (error) {
+                    Utils.exibirToast('Erro ao limpar dados: ' + error.message, 'error');
+                }
+            });
+            
+            // Botões de relatórios
+            document.getElementById('btn-relatorio-liberacoes')?.addEventListener('click', function() {
+                const liberacoes = DB.liberacoes.getAll();
+                
+                // Formatar dados para exportação
+                const dadosFormatados = liberacoes.map(liberacao => {
+                    // Calcular progresso
+                    const progresso = Number(liberacao.previsto) > 0 ? 
+                        (Number(liberacao.realizado) / Number(liberacao.previsto)) * 100 : 0;
+                    
+                    return {
+                        frente: liberacao.frente,
+                        fazenda: liberacao.fazenda,
+                        numero: liberacao.numero || '-',
+                        data: Utils.formatarData(liberacao.data),
+                        previsto: Utils.formatarToneladas(liberacao.previsto),
+                        realizado: Utils.formatarToneladas(liberacao.realizado),
+                        restante: Utils.formatarToneladas(liberacao.restante),
+                        progresso: progresso.toFixed(1) + '%',
+                        observacoes: liberacao.observacoes || '-'
+                    };
+                });
+                
+                // Adicionar linha de totais
+                const totals = DB.liberacoes.getTotals();
+                dadosFormatados.push({
+                    frente: '--- TOTAIS ---',
+                    fazenda: '',
+                    numero: '',
+                    data: '',
+                    previsto: Utils.formatarToneladas(totals.previsto),
+                    realizado: Utils.formatarToneladas(totals.realizado),
+                    restante: Utils.formatarToneladas(totals.restante),
+                    progresso: totals.previsto > 0 ? ((totals.realizado / totals.previsto) * 100).toFixed(1) + '%' : '0%',
+                    observacoes: ''
+                });
+                
+                // Definir colunas para o relatório
+                const colunas = [
+                    { header: 'Frente', dataKey: 'frente' },
+                    { header: 'Fazenda', dataKey: 'fazenda' },
+                    { header: 'Nº Liberação', dataKey: 'numero' },
+                    { header: 'Data', dataKey: 'data' },
+                    { header: 'Previsto (T)', dataKey: 'previsto' },
+                    { header: 'Realizado (T)', dataKey: 'realizado' },
+                    { header: 'Restante (T)', dataKey: 'restante' },
+                    { header: 'Progresso', dataKey: 'progresso' }
+                ];
+                
+                // Exportar para PDF
+                Utils.exportarPDF(
+                    'Relatório Completo de Liberações',
+                    dadosFormatados,
+                    colunas,
+                    'relatorio_completo_liberacoes.pdf'
+                );
+            });
+
+            // Relatório de metas
+            document.getElementById('btn-relatorio-metas')?.addEventListener('click', function() {
+                const metas = DB.metas.getAll();
+                
+                const dadosFormatados = metas.map(meta => {
+                    const frente = DB.frentes.get(meta.frenteId);
+                    const frenteNome = frente ? frente.nome : 'Frente não encontrada';
+                    const fazendaNome = frente ? frente.fazenda : '-';
+                    
+                    // Verificar se meta está ativa
+                    const hoje = new Date().toISOString().split('T')[0];
+                    const isAtiva = meta.dataInicio <= hoje && meta.dataFim >= hoje;
+                    
+                    return {
+                        frente: frenteNome,
+                        fazenda: fazendaNome,
+                        periodo: meta.periodo,
+                        valor: Utils.formatarToneladas(meta.valor),
+                        dataInicio: Utils.formatarData(meta.dataInicio),
+                        dataFim: Utils.formatarData(meta.dataFim),
+                        status: isAtiva ? 'Ativa' : 'Inativa',
+                        observacoes: meta.observacoes || '-'
+                    };
+                });
+                
+                const colunas = [
+                    { header: 'Frente', dataKey: 'frente' },
+                    { header: 'Fazenda', dataKey: 'fazenda' },
+                    { header: 'Período', dataKey: 'periodo' },
+                    { header: 'Meta (T)', dataKey: 'valor' },
+                    { header: 'Data Início', dataKey: 'dataInicio' },
+                    { header: 'Data Fim', dataKey: 'dataFim' },
+                    { header: 'Status', dataKey: 'status' },
+                    { header: 'Observações', dataKey: 'observacoes' }
+                ];
+                
+                Utils.exportarPDF(
+                    'Relatório de Metas',
+                    dadosFormatados,
+                    colunas,
+                    'relatorio_metas.pdf'
+                );
+            });
+
+            // Relatório de colheita
+            document.getElementById('btn-relatorio-colheita')?.addEventListener('click', function() {
+                const lancamentos = DB.lancamentos.getAll();
+                
+                const dadosFormatados = lancamentos.map(lancamento => {
+                    const frente = DB.frentes.get(lancamento.frenteId);
+                    const frenteNome = frente ? frente.nome : 'Frente não encontrada';
+                    const fazendaNome = frente ? frente.fazenda : '-';
+                    
+                    return {
+                        data: Utils.formatarData(lancamento.data),
+                        frente: frenteNome,
+                        fazenda: fazendaNome,
+                        colhido: Utils.formatarToneladas(lancamento.colhido),
+                        turno: lancamento.turno,
+                        operador: lancamento.operador || '-',
+                        observacoes: lancamento.observacoes || '-'
+                    };
+                });
+                
+                // Ordenar por data (mais recente primeiro)
+                dadosFormatados.sort((a, b) => new Date(b.data) - new Date(a.data));
+                
+                // Adicionar linha de totais
+                const totalColhido = lancamentos.reduce((sum, l) => sum + Number(l.colhido), 0);
+                dadosFormatados.push({
+                    data: '--- TOTAL ---',
+                    frente: '',
+                    fazenda: '',
+                    colhido: Utils.formatarToneladas(totalColhido),
+                    turno: '',
+                    operador: '',
+                    observacoes: ''
+                });
+                
+                const colunas = [
+                    { header: 'Data', dataKey: 'data' },
+                    { header: 'Frente', dataKey: 'frente' },
+                    { header: 'Fazenda', dataKey: 'fazenda' },
+                    { header: 'Colhido (T)', dataKey: 'colhido' },
+                    { header: 'Turno', dataKey: 'turno' },
+                    { header: 'Operador', dataKey: 'operador' },
+                    { header: 'Observações', dataKey: 'observacoes' }
+                ];
+                
+                Utils.exportarPDF(
+                    'Relatório de Colheita',
+                    dadosFormatados,
+                    colunas,
+                    'relatorio_colheita.pdf'
+                );
+            });
+        }
+    </script>
+</body>
+</html>
