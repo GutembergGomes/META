@@ -166,7 +166,7 @@
                 <!-- Rodapé do sidebar -->
                 <div class="p-4 border-t border-gray-200 dark:border-gray-700 text-center">
                     <p class="text-xs text-gray-500 dark:text-gray-400">GGOMES-LOG &copy; 2025</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Versão 1.1</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Versão 1.2</p>
                 </div>
             </div>
         </aside>
@@ -256,6 +256,18 @@
                                     </div>
                                     
                                     <div class="mb-4">
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="liberacao-status">
+                                            Status *
+                                        </label>
+                                        <select id="liberacao-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                                            <option value="aberto">Aberto</option>
+                                            <option value="fechado">Fechado</option>
+                                            <option value="em-andamento">Em Andamento</option>
+                                            <option value="cancelado">Cancelado</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-4">
                                         <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="liberacao-previsto">
                                             Previsto (T) *
                                         </label>
@@ -306,7 +318,7 @@
                                     </button>
                                 </div>
                                 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                     <div>
                                         <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="filtro-liberacao-frente">
                                             Frente
@@ -323,10 +335,22 @@
                                             <option value="">Todas</option>
                                         </select>
                                     </div>
+                                    <div>
+                                        <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium" for="filtro-liberacao-status">
+                                            Status
+                                        </label>
+                                        <select id="filtro-liberacao-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+                                            <option value="">Todos</option>
+                                            <option value="aberto">Aberto</option>
+                                            <option value="fechado">Fechado</option>
+                                            <option value="em-andamento">Em Andamento</option>
+                                            <option value="cancelado">Cancelado</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 
-                                <!-- Resumo -->
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                                <!-- Resumo Expandido -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mt-4">
                                     <div class="bg-gray-50 dark:bg-gray-900/30 p-3 rounded-lg">
                                         <div class="text-center">
                                             <span class="text-sm text-gray-500 dark:text-gray-400">Total Previsto</span>
@@ -341,8 +365,26 @@
                                     </div>
                                     <div class="bg-gray-50 dark:bg-gray-900/30 p-3 rounded-lg">
                                         <div class="text-center">
-                                            <span class="text-sm text-gray-500 dark:text-gray-400">Restante</span>
+                                            <span class="text-sm text-gray-500 dark:text-gray-400">Total Restante</span>
                                             <p id="resumo-total-restante" class="text-xl font-bold text-red-600 dark:text-red-400">0</p>
+                                        </div>
+                                    </div>
+                                    <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-lg">
+                                        <div class="text-center">
+                                            <span class="text-sm text-green-600 dark:text-green-400">Aberto</span>
+                                            <p id="resumo-status-aberto" class="text-xl font-bold text-green-700 dark:text-green-300">0</p>
+                                        </div>
+                                    </div>
+                                    <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg">
+                                        <div class="text-center">
+                                            <span class="text-sm text-blue-600 dark:text-blue-400">Fechado</span>
+                                            <p id="resumo-status-fechado" class="text-xl font-bold text-blue-700 dark:text-blue-300">0</p>
+                                        </div>
+                                    </div>
+                                    <div class="bg-purple-50 dark:bg-purple-900/30 p-3 rounded-lg">
+                                        <div class="text-center">
+                                            <span class="text-sm text-purple-600 dark:text-purple-400">Total Geral</span>
+                                            <p id="resumo-total-geral" class="text-xl font-bold text-purple-700 dark:text-purple-300">0</p>
                                         </div>
                                     </div>
                                 </div>
@@ -358,6 +400,7 @@
                                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Frente</th>
                                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Fazenda</th>
                                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nº Liberação</th>
+                                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
                                                 <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Previsto</th>
                                                 <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Realizado</th>
                                                 <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Restante</th>
@@ -367,7 +410,7 @@
                                         </thead>
                                         <tbody id="tabela-liberacoes" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                             <tr>
-                                                <td colspan="8" class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
+                                                <td colspan="9" class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
                                                     Carregando liberações...
                                                 </td>
                                             </tr>
@@ -843,7 +886,7 @@
                         
                         <div class="text-sm text-gray-600 dark:text-gray-400">
                             <p class="mb-2"><strong>Nome:</strong> GGOMES-LOG</p>
-                            <p class="mb-2"><strong>Versão:</strong> 1.1.0</p>
+                            <p class="mb-2"><strong>Versão:</strong> 1.2.0</p>
                             <p class="mb-2"><strong>Descrição:</strong> Sistema de Gestão Agrícola para acompanhamento de colheita, metas e logística.</p>
                             <p class="mb-4"><strong>Desenvolvido por:</strong> GGOMES Technologies</p>
                             
@@ -901,10 +944,11 @@
                     ontem.setDate(ontem.getDate() - 1);
                     const dataOntem = ontem.toISOString().split('T')[0];
                     
-                    // Dados iniciais de liberações
+                    // Dados iniciais de liberações (com status)
                     const liberacoesIniciais = [
-                        { id: 'LIB-001', frente: 'Frente 01', fazenda: 'Fazenda São João', numero: 'LIB-2025-001', previsto: 1000, realizado: 850, restante: 150, data: dataOntem, observacoes: 'Liberação inicial', dataRegistro: new Date().toISOString() },
-                        { id: 'LIB-002', frente: 'Frente 02', fazenda: 'Fazenda Boa Vista', numero: 'LIB-2025-002', previsto: 1500, realizado: 1200, restante: 300, data: dataHoje, observacoes: 'Em andamento', dataRegistro: new Date().toISOString() }
+                        { id: 'LIB-001', frente: 'Frente 01', fazenda: 'Fazenda São João', numero: 'LIB-2025-001', status: 'fechado', previsto: 1000, realizado: 850, restante: 150, data: dataOntem, observacoes: 'Liberação inicial', dataRegistro: new Date().toISOString() },
+                        { id: 'LIB-002', frente: 'Frente 02', fazenda: 'Fazenda Boa Vista', numero: 'LIB-2025-002', status: 'aberto', previsto: 1500, realizado: 1200, restante: 300, data: dataHoje, observacoes: 'Em andamento', dataRegistro: new Date().toISOString() },
+                        { id: 'LIB-003', frente: 'Frente 01', fazenda: 'Fazenda São João', numero: 'LIB-2025-003', status: 'em-andamento', previsto: 800, realizado: 400, restante: 400, data: dataHoje, observacoes: 'Iniciada hoje', dataRegistro: new Date().toISOString() }
                     ];
                     localStorage.setItem('ggomes_liberacoes', JSON.stringify(liberacoesIniciais));
                     
@@ -952,6 +996,31 @@
                 const config = JSON.parse(localStorage.getItem('ggomes_config'));
                 config.ultimoAcesso = new Date().toISOString();
                 localStorage.setItem('ggomes_config', JSON.stringify(config));
+                
+                // Migrar dados antigos (adicionar status se não existir)
+                this.migrateData();
+            },
+            
+            // Migrar dados antigos para incluir o campo status
+            migrateData: function() {
+                try {
+                    const liberacoes = JSON.parse(localStorage.getItem('ggomes_liberacoes') || '[]');
+                    let migrationNeeded = false;
+                    
+                    liberacoes.forEach(liberacao => {
+                        if (!liberacao.status) {
+                            liberacao.status = 'aberto'; // Status padrão para dados antigos
+                            migrationNeeded = true;
+                        }
+                    });
+                    
+                    if (migrationNeeded) {
+                        localStorage.setItem('ggomes_liberacoes', JSON.stringify(liberacoes));
+                        console.log('Dados migrados com sucesso: campo status adicionado às liberações');
+                    }
+                } catch (error) {
+                    console.error('Erro durante migração de dados:', error);
+                }
             },
             
             // Método para limpar todos os dados
@@ -988,7 +1057,7 @@
                         config: JSON.parse(localStorage.getItem('ggomes_config') || '{}'),
                         metaData: {
                             exportDate: new Date().toISOString(),
-                            version: '1.1.0'
+                            version: '1.2.0'
                         }
                     };
                     
@@ -1035,7 +1104,7 @@
                 }
             },
             
-            // Módulo de liberações (existente)
+            // Módulo de liberações (atualizado com status)
             liberacoes: {
                 // Obter todas as liberações
                 getAll: function() {
@@ -1057,7 +1126,7 @@
                 // Adicionar liberação
                 add: function(liberacao) {
                     // Validar dados básicos
-                    if (!liberacao.id || !liberacao.frente || !liberacao.fazenda || liberacao.previsto === undefined || liberacao.realizado === undefined || !liberacao.data) {
+                    if (!liberacao.id || !liberacao.frente || !liberacao.fazenda || !liberacao.status || liberacao.previsto === undefined || liberacao.realizado === undefined || !liberacao.data) {
                         throw new Error('Dados incompletos. Preencha todos os campos obrigatórios.');
                     }
                     
@@ -1139,8 +1208,8 @@
                     return true;
                 },
                 
-                // Obter totais
-                getTotals: function(filtroFrente = '', filtroFazenda = '') {
+                // Obter totais (atualizado com status)
+                getTotals: function(filtroFrente = '', filtroFazenda = '', filtroStatus = '') {
                     // Obter liberações
                     let liberacoes = this.getAll();
                     
@@ -1153,37 +1222,70 @@
                         liberacoes = liberacoes.filter(l => l.fazenda === filtroFazenda);
                     }
                     
+                    if (filtroStatus) {
+                        liberacoes = liberacoes.filter(l => l.status === filtroStatus);
+                    }
+                    
                     // Calcular totais
                     const totals = {
                         previsto: 0,
                         realizado: 0,
-                        restante: 0
+                        restante: 0,
+                        statusAberto: 0,
+                        statusFechado: 0,
+                        statusEmAndamento: 0,
+                        statusCancelado: 0,
+                        totalGeral: 0
                     };
                     
                     liberacoes.forEach(l => {
-                        totals.previsto += Number(l.previsto) || 0;
-                        totals.realizado += Number(l.realizado) || 0;
-                        totals.restante += Number(l.restante) || 0;
+                        const previsto = Number(l.previsto) || 0;
+                        const realizado = Number(l.realizado) || 0;
+                        const restante = Number(l.restante) || 0;
+                        
+                        totals.previsto += previsto;
+                        totals.realizado += realizado;
+                        totals.restante += restante;
+                        totals.totalGeral += previsto;
+                        
+                        // Contar por status
+                        switch(l.status) {
+                            case 'aberto':
+                                totals.statusAberto += previsto;
+                                break;
+                            case 'fechado':
+                                totals.statusFechado += previsto;
+                                break;
+                            case 'em-andamento':
+                                totals.statusEmAndamento += previsto;
+                                break;
+                            case 'cancelado':
+                                totals.statusCancelado += previsto;
+                                break;
+                        }
                     });
                     
                     return totals;
                 },
                 
-                // Obter frentes e fazendas únicas
+                // Obter frentes, fazendas e status únicos
                 getUniqueValues: function() {
                     const liberacoes = this.getAll();
                     
                     const frentes = new Set();
                     const fazendas = new Set();
+                    const status = new Set();
                     
                     liberacoes.forEach(l => {
                         frentes.add(l.frente);
                         fazendas.add(l.fazenda);
+                        if (l.status) status.add(l.status);
                     });
                     
                     return {
                         frentes: Array.from(frentes).sort(),
-                        fazendas: Array.from(fazendas).sort()
+                        fazendas: Array.from(fazendas).sort(),
+                        status: Array.from(status).sort()
                     };
                 }
             },
@@ -1475,6 +1577,18 @@
             // Gerar ID único baseado em um prefixo e timestamp
             gerarId: function(prefixo) {
                 return (prefixo || 'id') + '-' + Date.now();
+            },
+            
+            // Obter configuração de cor para status
+            getStatusConfig: function(status) {
+                const configs = {
+                    'aberto': { texto: 'Aberto', cor: 'green', bg: 'bg-green-100 dark:bg-green-800', text: 'text-green-700 dark:text-green-300' },
+                    'fechado': { texto: 'Fechado', cor: 'blue', bg: 'bg-blue-100 dark:bg-blue-800', text: 'text-blue-700 dark:text-blue-300' },
+                    'em-andamento': { texto: 'Em Andamento', cor: 'yellow', bg: 'bg-yellow-100 dark:bg-yellow-800', text: 'text-yellow-700 dark:text-yellow-300' },
+                    'cancelado': { texto: 'Cancelado', cor: 'red', bg: 'bg-red-100 dark:bg-red-800', text: 'text-red-700 dark:text-red-300' }
+                };
+                
+                return configs[status] || { texto: status, cor: 'gray', bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-700 dark:text-gray-300' };
             },
             
             // Mostrar toast de notificação temporário
@@ -1791,6 +1905,7 @@
             const formLiberacao = document.getElementById('form-liberacao');
             const filtroFrente = document.getElementById('filtro-liberacao-frente');
             const filtroFazenda = document.getElementById('filtro-liberacao-fazenda');
+            const filtroStatus = document.getElementById('filtro-liberacao-status');
             const btnExportLiberacoes = document.getElementById('btn-export-liberacoes');
             
             // Inicializar filtros e tabela
@@ -1812,6 +1927,13 @@
                 });
             }
             
+            if (filtroStatus) {
+                filtroStatus.addEventListener('change', function() {
+                    atualizarTabelaLiberacoes();
+                    atualizarResumoLiberacoes();
+                });
+            }
+            
             // Atualizar resumo inicial
             atualizarResumoLiberacoes();
             
@@ -1825,6 +1947,7 @@
                         frente: document.getElementById('liberacao-frente').value,
                         fazenda: document.getElementById('liberacao-fazenda').value,
                         numero: document.getElementById('liberacao-numero').value,
+                        status: document.getElementById('liberacao-status').value,
                         previsto: document.getElementById('liberacao-previsto').value,
                         realizado: document.getElementById('liberacao-realizado').value,
                         data: document.getElementById('liberacao-data').value,
@@ -1857,8 +1980,9 @@
                         formLiberacao.reset();
                         formLiberacao.removeAttribute('data-editing');
                         
-                        // Definir data para hoje
+                        // Definir data para hoje e status padrão
                         document.getElementById('liberacao-data').value = new Date().toISOString().split('T')[0];
+                        document.getElementById('liberacao-status').value = 'aberto';
                         
                         // Atualizar tabela, filtros e resumo
                         atualizarFiltrosLiberacoes();
@@ -1871,6 +1995,7 @@
                 
                 // Definir data para hoje por padrão
                 document.getElementById('liberacao-data').value = new Date().toISOString().split('T')[0];
+                document.getElementById('liberacao-status').value = 'aberto';
             }
             
             // Exportar liberações
@@ -1879,6 +2004,7 @@
                     // Obter filtros
                     const filtroFrenteValue = filtroFrente ? filtroFrente.value : '';
                     const filtroFazendaValue = filtroFazenda ? filtroFazenda.value : '';
+                    const filtroStatusValue = filtroStatus ? filtroStatus.value : '';
                     
                     // Obter liberações filtradas
                     let liberacoes = DB.liberacoes.getAll();
@@ -1891,28 +2017,38 @@
                         liberacoes = liberacoes.filter(l => l.fazenda === filtroFazendaValue);
                     }
                     
+                    if (filtroStatusValue) {
+                        liberacoes = liberacoes.filter(l => l.status === filtroStatusValue);
+                    }
+                    
                     // Ordenar por data (mais recente primeiro)
                     const liberacoesOrdenadas = [...liberacoes].sort((a, b) => new Date(b.data) - new Date(a.data));
                     
                     // Formatar dados para exportação
-                    const dadosFormatados = liberacoesOrdenadas.map(liberacao => ({
-                        frente: liberacao.frente,
-                        fazenda: liberacao.fazenda,
-                        numero: liberacao.numero || '-',
-                        data: Utils.formatarData(liberacao.data),
-                        previsto: Utils.formatarToneladas(liberacao.previsto),
-                        realizado: Utils.formatarToneladas(liberacao.realizado),
-                        restante: Utils.formatarToneladas(liberacao.restante),
-                        progresso: ((Number(liberacao.realizado) / Number(liberacao.previsto)) * 100).toFixed(1) + '%',
-                        observacoes: liberacao.observacoes || '-'
-                    }));
+                    const dadosFormatados = liberacoesOrdenadas.map(liberacao => {
+                        const statusConfig = Utils.getStatusConfig(liberacao.status);
+                        
+                        return {
+                            frente: liberacao.frente,
+                            fazenda: liberacao.fazenda,
+                            numero: liberacao.numero || '-',
+                            status: statusConfig.texto,
+                            data: Utils.formatarData(liberacao.data),
+                            previsto: Utils.formatarToneladas(liberacao.previsto),
+                            realizado: Utils.formatarToneladas(liberacao.realizado),
+                            restante: Utils.formatarToneladas(liberacao.restante),
+                            progresso: ((Number(liberacao.realizado) / Number(liberacao.previsto)) * 100).toFixed(1) + '%',
+                            observacoes: liberacao.observacoes || '-'
+                        };
+                    });
                     
                     // Adicionar linha de totais
-                    const totals = DB.liberacoes.getTotals(filtroFrenteValue, filtroFazendaValue);
+                    const totals = DB.liberacoes.getTotals(filtroFrenteValue, filtroFazendaValue, filtroStatusValue);
                     dadosFormatados.push({
                         frente: '--- TOTAIS ---',
                         fazenda: '',
                         numero: '',
+                        status: '',
                         data: '',
                         previsto: Utils.formatarToneladas(totals.previsto),
                         realizado: Utils.formatarToneladas(totals.realizado),
@@ -1926,6 +2062,7 @@
                         { header: 'Frente', dataKey: 'frente' },
                         { header: 'Fazenda', dataKey: 'fazenda' },
                         { header: 'Nº Liberação', dataKey: 'numero' },
+                        { header: 'Status', dataKey: 'status' },
                         { header: 'Data', dataKey: 'data' },
                         { header: 'Previsto (T)', dataKey: 'previsto' },
                         { header: 'Realizado (T)', dataKey: 'realizado' },
@@ -1948,8 +2085,9 @@
         function atualizarFiltrosLiberacoes() {
             const filtroFrente = document.getElementById('filtro-liberacao-frente');
             const filtroFazenda = document.getElementById('filtro-liberacao-fazenda');
+            const filtroStatus = document.getElementById('filtro-liberacao-status');
             
-            if (!filtroFrente || !filtroFazenda) return;
+            if (!filtroFrente || !filtroFazenda || !filtroStatus) return;
             
             // Obter valores únicos
             const valores = DB.liberacoes.getUniqueValues();
@@ -1957,6 +2095,7 @@
             // Salvar valores selecionados
             const frenteSelecionada = filtroFrente.value;
             const fazendaSelecionada = filtroFazenda.value;
+            const statusSelecionado = filtroStatus.value;
             
             // Atualizar opções de frente
             filtroFrente.innerHTML = '<option value="">Todas</option>';
@@ -1976,6 +2115,9 @@
                 filtroFazenda.appendChild(option);
             });
             
+            // Atualizar opções de status (elas são fixas mas vamos manter a funcionalidade)
+            // As opções já estão no HTML, apenas mantemos
+            
             // Restaurar valores selecionados se ainda existirem
             if (frenteSelecionada && valores.frentes.includes(frenteSelecionada)) {
                 filtroFrente.value = frenteSelecionada;
@@ -1984,6 +2126,10 @@
             if (fazendaSelecionada && valores.fazendas.includes(fazendaSelecionada)) {
                 filtroFazenda.value = fazendaSelecionada;
             }
+            
+            if (statusSelecionado) {
+                filtroStatus.value = statusSelecionado;
+            }
         }
         
         // Atualizar resumo de liberações
@@ -1991,17 +2137,24 @@
             // Obter filtros
             const filtroFrente = document.getElementById('filtro-liberacao-frente');
             const filtroFazenda = document.getElementById('filtro-liberacao-fazenda');
+            const filtroStatus = document.getElementById('filtro-liberacao-status');
             
             const filtroFrenteValue = filtroFrente ? filtroFrente.value : '';
             const filtroFazendaValue = filtroFazenda ? filtroFazenda.value : '';
+            const filtroStatusValue = filtroStatus ? filtroStatus.value : '';
             
             // Obter totais
-            const totals = DB.liberacoes.getTotals(filtroFrenteValue, filtroFazendaValue);
+            const totals = DB.liberacoes.getTotals(filtroFrenteValue, filtroFazendaValue, filtroStatusValue);
             
-            // Atualizar elementos
+            // Atualizar elementos básicos
             document.getElementById('resumo-total-previsto').textContent = Utils.formatarToneladas(totals.previsto);
             document.getElementById('resumo-total-realizado').textContent = Utils.formatarToneladas(totals.realizado);
             document.getElementById('resumo-total-restante').textContent = Utils.formatarToneladas(totals.restante);
+            
+            // Atualizar elementos de status
+            document.getElementById('resumo-status-aberto').textContent = Utils.formatarToneladas(totals.statusAberto);
+            document.getElementById('resumo-status-fechado').textContent = Utils.formatarToneladas(totals.statusFechado);
+            document.getElementById('resumo-total-geral').textContent = Utils.formatarToneladas(totals.totalGeral);
         }
         
         // Atualizar tabela de liberações
@@ -2012,9 +2165,11 @@
             // Obter filtros
             const filtroFrente = document.getElementById('filtro-liberacao-frente');
             const filtroFazenda = document.getElementById('filtro-liberacao-fazenda');
+            const filtroStatus = document.getElementById('filtro-liberacao-status');
             
             const filtroFrenteValue = filtroFrente ? filtroFrente.value : '';
             const filtroFazendaValue = filtroFazenda ? filtroFazenda.value : '';
+            const filtroStatusValue = filtroStatus ? filtroStatus.value : '';
             
             // Obter liberações
             let liberacoes = DB.liberacoes.getAll();
@@ -2028,13 +2183,17 @@
                 liberacoes = liberacoes.filter(l => l.fazenda === filtroFazendaValue);
             }
             
+            if (filtroStatusValue) {
+                liberacoes = liberacoes.filter(l => l.status === filtroStatusValue);
+            }
+            
             // Limpar tabela
             tabelaElement.innerHTML = '';
             
             if (liberacoes.length === 0) {
                 tabelaElement.innerHTML = `
                     <tr>
-                        <td colspan="8" class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
+                        <td colspan="9" class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
                             Nenhuma liberação encontrada
                         </td>
                     </tr>
@@ -2051,11 +2210,19 @@
                 const progresso = Number(liberacao.previsto) > 0 ? 
                     (Number(liberacao.realizado) / Number(liberacao.previsto)) * 100 : 0;
                 
+                // Obter configuração do status
+                const statusConfig = Utils.getStatusConfig(liberacao.status || 'aberto');
+                
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="px-4 py-3 text-gray-700 dark:text-gray-300">${liberacao.frente}</td>
                     <td class="px-4 py-3 text-gray-700 dark:text-gray-300">${liberacao.fazenda}</td>
                     <td class="px-4 py-3 text-gray-700 dark:text-gray-300">${liberacao.numero || '-'}</td>
+                    <td class="px-4 py-3 text-center">
+                        <span class="px-2 py-1 rounded text-xs font-medium ${statusConfig.bg} ${statusConfig.text}">
+                            ${statusConfig.texto}
+                        </span>
+                    </td>
                     <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300">${Utils.formatarToneladas(liberacao.previsto)}</td>
                     <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300">${Utils.formatarToneladas(liberacao.realizado)}</td>
                     <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300">${Utils.formatarToneladas(liberacao.restante)}</td>
@@ -2107,6 +2274,7 @@
                 document.getElementById('liberacao-frente').value = liberacao.frente || '';
                 document.getElementById('liberacao-fazenda').value = liberacao.fazenda || '';
                 document.getElementById('liberacao-numero').value = liberacao.numero || '';
+                document.getElementById('liberacao-status').value = liberacao.status || 'aberto';
                 document.getElementById('liberacao-previsto').value = liberacao.previsto || '';
                 document.getElementById('liberacao-realizado').value = liberacao.realizado || '';
                 document.getElementById('liberacao-data').value = liberacao.data || '';
@@ -3035,10 +3203,13 @@
                     const progresso = Number(liberacao.previsto) > 0 ? 
                         (Number(liberacao.realizado) / Number(liberacao.previsto)) * 100 : 0;
                     
+                    const statusConfig = Utils.getStatusConfig(liberacao.status || 'aberto');
+                    
                     return {
                         frente: liberacao.frente,
                         fazenda: liberacao.fazenda,
                         numero: liberacao.numero || '-',
+                        status: statusConfig.texto,
                         data: Utils.formatarData(liberacao.data),
                         previsto: Utils.formatarToneladas(liberacao.previsto),
                         realizado: Utils.formatarToneladas(liberacao.realizado),
@@ -3054,6 +3225,7 @@
                     frente: '--- TOTAIS ---',
                     fazenda: '',
                     numero: '',
+                    status: '',
                     data: '',
                     previsto: Utils.formatarToneladas(totals.previsto),
                     realizado: Utils.formatarToneladas(totals.realizado),
@@ -3067,6 +3239,7 @@
                     { header: 'Frente', dataKey: 'frente' },
                     { header: 'Fazenda', dataKey: 'fazenda' },
                     { header: 'Nº Liberação', dataKey: 'numero' },
+                    { header: 'Status', dataKey: 'status' },
                     { header: 'Data', dataKey: 'data' },
                     { header: 'Previsto (T)', dataKey: 'previsto' },
                     { header: 'Realizado (T)', dataKey: 'realizado' },
