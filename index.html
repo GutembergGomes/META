@@ -745,6 +745,7 @@
                                         <select id="frente-tipo" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all-300" required>
                                             <option value="propria">Própria</option>
                                             <option value="terceira">Terceira</option>
+                                            <option value="desconhecido">Desconhecido</option>
                                         </select>
                                     </div>
                                     
@@ -1147,6 +1148,7 @@
                                         <option value="">Todos os tipos</option>
                                         <option value="propria">Próprias</option>
                                         <option value="terceira">Terceiras</option>
+                                        <option value="desconhecido">Desconhecidas</option>
                                     </select>
                                 </div>
                                 <div>
@@ -1304,6 +1306,7 @@
                                 <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                                     <li>• Separação de metas próprias e terceiras</li>
                                     <li>• Classificação de frentes por tipo</li>
+                                    <li>• Adição do tipo "Desconhecido" para frentes</li>
                                     <li>• Dashboard com indicadores separados</li>
                                     <li>• Relatórios específicos por tipo de frente</li>
                                     <li>• Compatibilidade com backups v2.0</li>
@@ -1530,6 +1533,16 @@ const DB = {
                     responsavel: 'Pedro Lima',
                     status: 'ativa',
                     observacoes: 'Nova frente terceirizada',
+                    dataRegistro: new Date().toISOString()
+                },
+                {
+                    id: 'FRENTE-004',
+                    nome: 'Frente Desconhecida X',
+                    fazenda: 'Fazenda Nova',
+                    tipo: 'desconhecido',
+                    responsavel: 'A definir',
+                    status: 'inativa',
+                    observacoes: 'Frente em análise para classificação',
                     dataRegistro: new Date().toISOString()
                 }
             ];
@@ -2313,6 +2326,13 @@ const Utils = {
                 bg: 'bg-orange-100 dark:bg-orange-900',
                 text: 'text-orange-700 dark:text-orange-300',
                 icon: 'fa-handshake'
+            },
+            'desconhecido': {
+                texto: 'Desconhecido',
+                cor: 'gray',
+                bg: 'bg-gray-100 dark:bg-gray-900',
+                text: 'text-gray-700 dark:text-gray-300',
+                icon: 'fa-question-circle'
             }
         };
         
@@ -4271,7 +4291,7 @@ function atualizarTabelaLancamento() {
     lancamentos.forEach(lancamento => {
         const frente = DB.frentes.get(lancamento.frenteId);
         const frenteNome = frente ? frente.nome : 'Frente não encontrada';
-        const tipoConfig = frente ? Utils.getTipoConfig(frente.tipo) : Utils.getTipoConfig('propria');
+        const tipoConfig = frente ? Utils.getTipoConfig(frente.tipo) : Utils.getTipoConfig('desconhecido');
         
         const row = document.createElement('tr');
         row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors';
@@ -4375,13 +4395,8 @@ function inicializarAcompanhamento() {
     document.getElementById('filtro-acompanhamento-data-inicio').value = dataInicioStr;
     document.getElementById('filtro-acompanhamento-data-fim').value = dataFim;
     
-    document.getElementById('btn-aplicar-filtro-acompanhamento')?.addEventListener('click', () => {
-        atualizarAcompanhamento();
-    });
-    
-    document.getElementById('btn-exportar-acompanhamento')?.addEventListener('click', () => {
-        exportarRelatorioAcompanhamento();
-    });
+    document.getElementById('btn-aplicar-filtro-acompanhamento')?.addEventListener('click', atualizarAcompanhamento);
+    document.getElementById('btn-exportar-acompanhamento')?.addEventListener('click', exportarAcompanhamento);
 }
 
 function atualizarSelectFrenteAcompanhamento() {
@@ -4407,116 +4422,122 @@ function atualizarSelectFrenteAcompanhamento() {
 }
 
 function atualizarAcompanhamento() {
-    const frenteId = document.getElementById('filtro-acompanhamento-frente').value;
-    const tipoFiltro = document.getElementById('filtro-acompanhamento-tipo').value;
-    const dataInicio = document.getElementById('filtro-acompanhamento-data-inicio').value;
-    const dataFim = document.getElementById('filtro-acompanhamento-data-fim').value;
+    const filtros = {
+        frenteId: document.getElementById('filtro-acompanhamento-frente')?.value || '',
+        tipo: document.getElementById('filtro-acompanhamento-tipo')?.value || '',
+        dataInicio: document.getElementById('filtro-acompanhamento-data-inicio')?.value || '',
+        dataFim: document.getElementById('filtro-acompanhamento-data-fim')?.value || ''
+    };
     
     let frentes = DB.frentes.getAll();
     
-    if (frenteId) {
-        frentes = frentes.filter(f => f.id === frenteId);
+    if (filtros.frenteId) {
+        frentes = frentes.filter(f => f.id === filtros.frenteId);
     }
     
-    if (tipoFiltro) {
-        frentes = frentes.filter(f => f.tipo === tipoFiltro);
+    if (filtros.tipo) {
+        frentes = frentes.filter(f => f.tipo === filtros.tipo);
     }
     
-    let metasPropriasAtivas = 0;
-    let metasTerceirasAtivas = 0;
-    let totalColhido = 0;
-    let totalMetaValor = 0;
+    const dataInicio = filtros.dataInicio || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const dataFim = filtros.dataFim || new Date().toISOString().split('T')[0];
     
-    frentes.forEach(frente => {
+    const resumo = {
+        metasProprias: 0,
+        metasTerceiras: 0,
+        totalColhido: 0,
+        totalMeta: 0,
+        percentualMeta: 0
+    };
+    
+    const dadosAcompanhamento = frentes.map(frente => {
         const metas = DB.metas.getAll().filter(m => 
             m.frenteId === frente.id &&
-            (!dataInicio || m.dataInicio >= dataInicio) &&
-            (!dataFim || m.dataFim <= dataFim)
+            m.dataInicio <= dataFim &&
+            m.dataFim >= dataInicio
         );
         
-        const colhido = DB.lancamentos.getTotalColhidoPorFrente(frente.id, dataInicio || '1900-01-01', dataFim || '2100-12-31');
+        const metaTotal = metas.reduce((sum, m) => sum + Number(m.valor), 0);
         
-        const metasProprias = metas.filter(m => m.tipo === 'propria');
-        const metasTerceiras = metas.filter(m => m.tipo === 'terceira');
+        const lancamentos = DB.lancamentos.getAll().filter(l => 
+            l.frenteId === frente.id &&
+            l.data >= dataInicio &&
+            l.data <= dataFim
+        );
         
-        metasPropriasAtivas += metasProprias.length;
-        metasTerceirasAtivas += metasTerceiras.length;
-        totalColhido += colhido;
-        totalMetaValor += metas.reduce((sum, m) => sum + Number(m.valor), 0);
+        const colhidoTotal = lancamentos.reduce((sum, l) => sum + Number(l.colhido), 0);
+        const restante = Math.max(0, metaTotal - colhidoTotal);
+        const percentualMeta = metaTotal > 0 ? (colhidoTotal / metaTotal) * 100 : 0;
+        
+        if (frente.tipo === 'propria') resumo.metasProprias++;
+        if (frente.tipo === 'terceira') resumo.metasTerceiras++;
+        
+        resumo.totalColhido += colhidoTotal;
+        resumo.totalMeta += metaTotal;
+        
+        return {
+            frente: frente,
+            metaTotal: metaTotal,
+            colhidoTotal: colhidoTotal,
+            restante: restante,
+            percentualMeta: percentualMeta
+        };
     });
     
-    const percentualMeta = totalMetaValor > 0 ? (totalColhido / totalMetaValor) * 100 : 0;
+    resumo.percentualMeta = resumo.totalMeta > 0 ? (resumo.totalColhido / resumo.totalMeta) * 100 : 0;
     
-    document.getElementById('resumo-metas-proprias-ativas').textContent = metasPropriasAtivas;
-    document.getElementById('resumo-metas-terceiras-ativas').textContent = metasTerceirasAtivas;
-    document.getElementById('resumo-total-colhido').textContent = Utils.formatarToneladas(totalColhido);
-    document.getElementById('resumo-total-meta').textContent = Utils.formatarToneladas(totalMetaValor);
-    document.getElementById('resumo-percentual-meta').textContent = percentualMeta.toFixed(1) + '%';
+    // Atualizar cards de resumo
+    document.getElementById('resumo-metas-proprias-ativas').textContent = resumo.metasProprias;
+    document.getElementById('resumo-metas-terceiras-ativas').textContent = resumo.metasTerceiras;
+    document.getElementById('resumo-total-colhido').textContent = Utils.formatarToneladas(resumo.totalColhido);
+    document.getElementById('resumo-total-meta').textContent = Utils.formatarToneladas(resumo.totalMeta);
+    document.getElementById('resumo-percentual-meta').textContent = resumo.percentualMeta.toFixed(1) + '%';
     
-    atualizarTabelaAcompanhamento(frentes, dataInicio, dataFim);
-}
-
-function atualizarTabelaAcompanhamento(frentes, dataInicio, dataFim) {
+    // Atualizar tabela
     const tabelaElement = document.getElementById('tabela-acompanhamento');
     if (!tabelaElement) return;
     
     tabelaElement.innerHTML = '';
     
-    if (frentes.length === 0) {
+    if (dadosAcompanhamento.length === 0) {
         tabelaElement.innerHTML = `
             <tr>
                 <td colspan="8" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                     <i class="fas fa-chart-line text-3xl mb-2"></i>
                     <p>Nenhuma frente encontrada</p>
-                    <p class="text-sm">Ajuste os filtros para ver os dados</p>
+                    <p class="text-sm">Ajuste os filtros para visualizar dados</p>
                 </td>
             </tr>
         `;
         return;
     }
     
-    frentes.forEach(frente => {
-        const metas = DB.metas.getAll().filter(m => 
-            m.frenteId === frente.id &&
-            (!dataInicio || m.dataInicio >= dataInicio) &&
-            (!dataFim || m.dataFim <= dataFim)
-        );
-        
-        const totalMeta = metas.reduce((sum, m) => sum + Number(m.valor), 0);
-        const totalColhido = DB.lancamentos.getTotalColhidoPorFrente(
-            frente.id, 
-            dataInicio || '1900-01-01', 
-            dataFim || '2100-12-31'
-        );
-        
-        const restante = Math.max(0, totalMeta - totalColhido);
-        const percentualMeta = totalMeta > 0 ? (totalColhido / totalMeta) * 100 : 0;
-        
-        const statusMeta = Utils.getStatusMeta(percentualMeta);
-        const tipoConfig = Utils.getTipoConfig(frente.tipo);
+    dadosAcompanhamento.forEach(item => {
+        const tipoConfig = Utils.getTipoConfig(item.frente.tipo);
+        const statusMeta = Utils.getStatusMeta(item.percentualMeta);
         
         const row = document.createElement('tr');
         row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors';
         row.innerHTML = `
-            <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">${frente.nome}</td>
+            <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">${item.frente.nome}</td>
             <td class="px-4 py-3 text-center">
-                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium ${tipoConfig.bg} ${tipoConfig.text}">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${tipoConfig.bg} ${tipoConfig.text}">
                     <i class="fas ${tipoConfig.icon} mr-1"></i>
                     ${tipoConfig.texto}
                 </span>
             </td>
-            <td class="px-4 py-3 text-center text-sm font-medium text-gray-900 dark:text-gray-100">${Utils.formatarToneladas(totalMeta)}</td>
-            <td class="px-4 py-3 text-center text-sm font-medium text-green-600 dark:text-green-400">${Utils.formatarToneladas(totalColhido)}</td>
-            <td class="px-4 py-3 text-center text-sm font-medium text-red-600 dark:text-red-400">${Utils.formatarToneladas(restante)}</td>
-            <td class="px-4 py-3 text-center text-sm font-bold text-gray-900 dark:text-gray-100">${percentualMeta.toFixed(1)}%</td>
+            <td class="px-4 py-3 text-center text-sm font-medium text-gray-900 dark:text-gray-100">${Utils.formatarToneladas(item.metaTotal)}</td>
+            <td class="px-4 py-3 text-center text-sm font-medium text-green-600 dark:text-green-400">${Utils.formatarToneladas(item.colhidoTotal)}</td>
+            <td class="px-4 py-3 text-center text-sm font-medium text-red-600 dark:text-red-400">${Utils.formatarToneladas(item.restante)}</td>
+            <td class="px-4 py-3 text-center text-sm font-bold ${item.percentualMeta >= 100 ? 'text-green-600' : item.percentualMeta >= 80 ? 'text-yellow-600' : 'text-red-600'}">${item.percentualMeta.toFixed(1)}%</td>
             <td class="px-4 py-3 text-center">
-                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-${statusMeta.cor}-100 dark:bg-${statusMeta.cor}-900 text-${statusMeta.cor}-700 dark:text-${statusMeta.cor}-300">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${statusMeta.cor}-100 dark:bg-${statusMeta.cor}-900 text-${statusMeta.cor}-700 dark:text-${statusMeta.cor}-300">
                     ${statusMeta.texto}
                 </span>
             </td>
             <td class="px-4 py-3 text-center">
                 <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                    <div class="progress-bar bg-gradient-to-r from-${statusMeta.cor}-500 to-${statusMeta.cor}-600 h-2.5 rounded-full" style="width: ${Math.min(percentualMeta, 100)}%"></div>
+                    <div class="progress-bar bg-gradient-to-r ${item.percentualMeta >= 100 ? 'from-green-500 to-green-600' : item.percentualMeta >= 80 ? 'from-yellow-500 to-yellow-600' : 'from-red-500 to-red-600'} h-2.5 rounded-full" style="width: ${Math.min(item.percentualMeta, 100)}%"></div>
                 </div>
             </td>
         `;
@@ -4525,23 +4546,25 @@ function atualizarTabelaAcompanhamento(frentes, dataInicio, dataFim) {
     });
 }
 
-function exportarRelatorioAcompanhamento() {
+function exportarAcompanhamento() {
     try {
         Utils.showLoading(true);
         
-        const frenteId = document.getElementById('filtro-acompanhamento-frente').value;
-        const tipoFiltro = document.getElementById('filtro-acompanhamento-tipo').value;
-        const dataInicio = document.getElementById('filtro-acompanhamento-data-inicio').value;
-        const dataFim = document.getElementById('filtro-acompanhamento-data-fim').value;
+        const filtros = {
+            frenteId: document.getElementById('filtro-acompanhamento-frente')?.value || '',
+            tipo: document.getElementById('filtro-acompanhamento-tipo')?.value || '',
+            dataInicio: document.getElementById('filtro-acompanhamento-data-inicio')?.value || '',
+            dataFim: document.getElementById('filtro-acompanhamento-data-fim')?.value || ''
+        };
         
         let frentes = DB.frentes.getAll();
         
-        if (frenteId) {
-            frentes = frentes.filter(f => f.id === frenteId);
+        if (filtros.frenteId) {
+            frentes = frentes.filter(f => f.id === filtros.frenteId);
         }
         
-        if (tipoFiltro) {
-            frentes = frentes.filter(f => f.tipo === tipoFiltro);
+        if (filtros.tipo) {
+            frentes = frentes.filter(f => f.tipo === filtros.tipo);
         }
         
         if (frentes.length === 0) {
@@ -4549,22 +4572,27 @@ function exportarRelatorioAcompanhamento() {
             return;
         }
         
+        const dataInicio = filtros.dataInicio || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const dataFim = filtros.dataFim || new Date().toISOString().split('T')[0];
+        
         const dadosFormatados = frentes.map(frente => {
             const metas = DB.metas.getAll().filter(m => 
                 m.frenteId === frente.id &&
-                (!dataInicio || m.dataInicio >= dataInicio) &&
-                (!dataFim || m.dataFim <= dataFim)
+                m.dataInicio <= dataFim &&
+                m.dataFim >= dataInicio
             );
             
-            const totalMeta = metas.reduce((sum, m) => sum + Number(m.valor), 0);
-            const totalColhido = DB.lancamentos.getTotalColhidoPorFrente(
-                frente.id, 
-                dataInicio || '1900-01-01', 
-                dataFim || '2100-12-31'
+            const metaTotal = metas.reduce((sum, m) => sum + Number(m.valor), 0);
+            
+            const lancamentos = DB.lancamentos.getAll().filter(l => 
+                l.frenteId === frente.id &&
+                l.data >= dataInicio &&
+                l.data <= dataFim
             );
             
-            const restante = Math.max(0, totalMeta - totalColhido);
-            const percentualMeta = totalMeta > 0 ? (totalColhido / totalMeta) * 100 : 0;
+            const colhidoTotal = lancamentos.reduce((sum, l) => sum + Number(l.colhido), 0);
+            const restante = Math.max(0, metaTotal - colhidoTotal);
+            const percentualMeta = metaTotal > 0 ? (colhidoTotal / metaTotal) * 100 : 0;
             const statusMeta = Utils.getStatusMeta(percentualMeta);
             const tipoConfig = Utils.getTipoConfig(frente.tipo);
             
@@ -4572,11 +4600,10 @@ function exportarRelatorioAcompanhamento() {
                 frente: frente.nome,
                 fazenda: frente.fazenda,
                 tipo: tipoConfig.texto,
-                responsavel: frente.responsavel || '-',
-                meta: Utils.formatarToneladas(totalMeta),
-                colhido: Utils.formatarToneladas(totalColhido),
+                metaTotal: Utils.formatarToneladas(metaTotal),
+                colhidoTotal: Utils.formatarToneladas(colhidoTotal),
                 restante: Utils.formatarToneladas(restante),
-                percentual: percentualMeta.toFixed(1) + '%',
+                percentualMeta: percentualMeta.toFixed(1) + '%',
                 status: statusMeta.texto
             };
         });
@@ -4585,184 +4612,182 @@ function exportarRelatorioAcompanhamento() {
             { header: 'Frente', dataKey: 'frente' },
             { header: 'Fazenda', dataKey: 'fazenda' },
             { header: 'Tipo', dataKey: 'tipo' },
-            { header: 'Responsável', dataKey: 'responsavel' },
-            { header: 'Meta (T)', dataKey: 'meta' },
-            { header: 'Colhido (T)', dataKey: 'colhido' },
+            { header: 'Meta (T)', dataKey: 'metaTotal' },
+            { header: 'Colhido (T)', dataKey: 'colhidoTotal' },
             { header: 'Restante (T)', dataKey: 'restante' },
-            { header: '% Meta', dataKey: 'percentual' },
+            { header: '% Meta', dataKey: 'percentualMeta' },
             { header: 'Status', dataKey: 'status' }
         ];
         
         let titulo = 'Relatório de Acompanhamento de Metas';
-        if (dataInicio && dataFim) {
-            titulo += ` (${Utils.formatarData(dataInicio)} a ${Utils.formatarData(dataFim)})`;
+        if (filtros.tipo) {
+            titulo += ` - ${Utils.getTipoConfig(filtros.tipo).texto}s`;
+        }
+        if (filtros.dataInicio && filtros.dataFim) {
+            titulo += ` (${Utils.formatarData(filtros.dataInicio)} a ${Utils.formatarData(filtros.dataFim)})`;
         }
         
         setTimeout(() => {
-            Utils.exportarPDF(titulo, dadosFormatados, colunas, `acompanhamento_metas_${new Date().toISOString().split('T')[0]}.pdf`);
+            Utils.exportarPDF(titulo, dadosFormatados, colunas, `acompanhamento_${new Date().toISOString().split('T')[0]}.pdf`);
             Utils.showLoading(false);
         }, 500);
         
     } catch (error) {
         Utils.showLoading(false);
-        Toast.show('Erro ao exportar relatório: ' + error.message, 'error');
+        Toast.show('Erro ao exportar: ' + error.message, 'error');
     }
 }
 
 // ===== CONFIGURAÇÕES =====
 
 function inicializarConfiguracoes() {
-    document.getElementById('btn-exportar-json')?.addEventListener('click', exportarDadosJSON);
+    document.getElementById('btn-exportar-json')?.addEventListener('click', exportarDados);
     document.getElementById('btn-importar-json')?.addEventListener('click', () => {
         document.getElementById('import-json-file').click();
     });
-    document.getElementById('import-json-file')?.addEventListener('change', importarDadosJSON);
-    document.getElementById('btn-limpar-dados')?.addEventListener('click', mostrarModalLimparDados);
     
-    document.getElementById('btn-relatorio-liberacoes')?.addEventListener('click', () => {
-        exportarLiberacoes();
-    });
+    document.getElementById('import-json-file')?.addEventListener('change', importarDados);
+    document.getElementById('btn-limpar-dados')?.addEventListener('click', mostrarModalLimpeza);
     
-    document.getElementById('btn-relatorio-metas')?.addEventListener('click', () => {
-        gerarRelatorioMetas();
-    });
+    // Relatórios
+    document.getElementById('btn-relatorio-liberacoes')?.addEventListener('click', () => gerarRelatorio('liberacoes'));
+    document.getElementById('btn-relatorio-metas')?.addEventListener('click', () => gerarRelatorio('metas'));
+    document.getElementById('btn-relatorio-colheita')?.addEventListener('click', () => gerarRelatorio('colheita'));
     
-    document.getElementById('btn-relatorio-colheita')?.addEventListener('click', () => {
-        gerarRelatorioColheita();
-    });
+    // Modal de confirmação
+    document.getElementById('btn-cancelar-limpar')?.addEventListener('click', fecharModalLimpeza);
+    document.getElementById('btn-confirmar-limpar')?.addEventListener('click', confirmarLimpeza);
     
-    configurarModalLimparDados();
+    const confirmacaoTexto = document.getElementById('confirmacao-texto');
+    if (confirmacaoTexto) {
+        confirmacaoTexto.addEventListener('input', function() {
+            const btnConfirmar = document.getElementById('btn-confirmar-limpar');
+            if (this.value === 'CONFIRMAR') {
+                btnConfirmar.disabled = false;
+                btnConfirmar.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                btnConfirmar.disabled = true;
+                btnConfirmar.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        });
+    }
 }
 
-function exportarDadosJSON() {
+function exportarDados() {
     try {
         Utils.showLoading(true);
         
         setTimeout(() => {
             try {
-                const dadosJSON = DB.exportData();
-                const blob = new Blob([dadosJSON], { type: 'application/json' });
+                const jsonData = DB.exportData();
+                const blob = new Blob([jsonData], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `ggomes-log-backup-${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ggomes-log-backup-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
                 URL.revokeObjectURL(url);
                 
                 Toast.show('Backup exportado com sucesso!', 'success');
+                NotificationManager.add('Backup de dados realizado com sucesso', 'success');
             } catch (error) {
-                Toast.show('Erro ao exportar backup: ' + error.message, 'error');
+                Toast.show('Erro ao exportar: ' + error.message, 'error');
             } finally {
                 Utils.showLoading(false);
             }
         }, 500);
-        
     } catch (error) {
         Utils.showLoading(false);
         Toast.show('Erro ao preparar exportação: ' + error.message, 'error');
     }
 }
 
-function importarDadosJSON(event) {
+function importarDados(event) {
     const file = event.target.files[0];
     if (!file) return;
     
-    if (file.type !== 'application/json') {
+    if (!file.name.endsWith('.json')) {
         Toast.show('Por favor, selecione um arquivo JSON válido', 'error');
         return;
     }
     
     const reader = new FileReader();
+    
     reader.onload = function(e) {
         try {
             Utils.showLoading(true);
             
             setTimeout(() => {
                 try {
-                    DB.importData(e.target.result);
+                    const jsonData = e.target.result;
                     
-                    Toast.show('Dados importados com sucesso! Recarregando aplicação...', 'success');
+                    if (!confirm('Tem certeza que deseja importar os dados?\n\nEsta ação irá sobrescrever todos os dados existentes.')) {
+                        return;
+                    }
                     
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1500);
+                    DB.importData(jsonData);
                     
+                    // Atualizar todas as interfaces
+                    atualizarFiltrosLiberacoes();
+                    atualizarTabelaLiberacoes();
+                    atualizarResumoLiberacoes();
+                    
+                    if (document.getElementById('tab-frentes').classList.contains('hidden') === false) {
+                        atualizarTabelaFrente();
+                    }
+                    
+                    Toast.show('Dados importados com sucesso!', 'success');
+                    NotificationManager.add('Dados importados do backup com sucesso', 'success');
                 } catch (error) {
-                    Toast.show('Erro ao importar dados: ' + error.message, 'error');
+                    Toast.show('Erro ao importar: ' + error.message, 'error');
                 } finally {
                     Utils.showLoading(false);
+                    event.target.value = '';
                 }
             }, 500);
-            
         } catch (error) {
             Utils.showLoading(false);
-            Toast.show('Erro ao processar arquivo: ' + error.message, 'error');
+            Toast.show('Erro ao ler arquivo: ' + error.message, 'error');
+            event.target.value = '';
         }
     };
     
+    reader.onerror = function() {
+        Toast.show('Erro ao ler o arquivo', 'error');
+        event.target.value = '';
+    };
+    
     reader.readAsText(file);
-    event.target.value = '';
 }
 
-function mostrarModalLimparDados() {
+function mostrarModalLimpeza() {
     const modal = document.getElementById('modal-limpar-dados');
     if (modal) {
         modal.classList.remove('hidden');
-        document.getElementById('confirmacao-texto').focus();
+        document.getElementById('confirmacao-texto').value = '';
+        document.getElementById('btn-confirmar-limpar').disabled = true;
+        document.getElementById('btn-confirmar-limpar').classList.add('opacity-50', 'cursor-not-allowed');
     }
 }
 
-function configurarModalLimparDados() {
+function fecharModalLimpeza() {
     const modal = document.getElementById('modal-limpar-dados');
-    const btnCancelar = document.getElementById('btn-cancelar-limpar');
-    const btnConfirmar = document.getElementById('btn-confirmar-limpar');
-    const inputConfirmacao = document.getElementById('confirmacao-texto');
-    
-    function fecharModal() {
+    if (modal) {
         modal.classList.add('hidden');
-        inputConfirmacao.value = '';
-        btnConfirmar.disabled = true;
-        btnConfirmar.classList.add('opacity-50', 'cursor-not-allowed');
     }
-    
-    btnCancelar?.addEventListener('click', fecharModal);
-    
-    modal?.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            fecharModal();
-        }
-    });
-    
-    inputConfirmacao?.addEventListener('input', (e) => {
-        const valor = e.target.value.trim().toUpperCase();
-        if (valor === 'CONFIRMAR') {
-            btnConfirmar.disabled = false;
-            btnConfirmar.classList.remove('opacity-50', 'cursor-not-allowed');
-        } else {
-            btnConfirmar.disabled = true;
-            btnConfirmar.classList.add('opacity-50', 'cursor-not-allowed');
-        }
-    });
-    
-    btnConfirmar?.addEventListener('click', () => {
-        if (inputConfirmacao.value.trim().toUpperCase() === 'CONFIRMAR') {
-            executarLimpezaDados();
-            fecharModal();
-        }
-    });
-    
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
-            fecharModal();
-        }
-    });
 }
 
-function executarLimpezaDados() {
+function confirmarLimpeza() {
+    const confirmacao = document.getElementById('confirmacao-texto').value;
+    
+    if (confirmacao !== 'CONFIRMAR') {
+        Toast.show('Digite "CONFIRMAR" para confirmar a ação', 'error');
+        return;
+    }
+    
     try {
         Utils.showLoading(true);
         
@@ -4771,230 +4796,274 @@ function executarLimpezaDados() {
                 const sucesso = DB.clearAll();
                 
                 if (sucesso) {
-                    Toast.show('Todos os dados foram limpos com sucesso! Recarregando aplicação...', 'success');
+                    // Limpar formulários
+                    document.querySelectorAll('form').forEach(form => {
+                        form.reset();
+                        Utils.clearFormValidation(form);
+                    });
                     
-                    setTimeout(() => {
-                        location.reload();
-                    }, 2000);
+                    // Resetar variáveis de controle
+                    currentLiberacoesPage = 1;
+                    currentLiberacoesSort = { field: 'data', direction: 'desc' };
+                    
+                    // Atualizar todas as interfaces
+                    atualizarFiltrosLiberacoes();
+                    atualizarTabelaLiberacoes();
+                    atualizarResumoLiberacoes();
+                    atualizarDashboard();
+                    
+                    if (!document.getElementById('tab-frentes').classList.contains('hidden')) {
+                        atualizarTabelaFrente();
+                    }
+                    
+                    // Limpar gráficos
+                    ChartManager.updateCharts();
+                    
+                    // Limpar notificações
+                    NotificationManager.clear();
+                    
+                    fecharModalLimpeza();
+                    Toast.show('Todos os dados foram removidos com sucesso!', 'success');
+                    NotificationManager.add('Sistema resetado - todos os dados foram removidos', 'warning');
                 } else {
-                    Toast.show('Erro ao limpar dados', 'error');
+                    Toast.show('Erro ao limpar os dados', 'error');
                 }
             } catch (error) {
                 Toast.show('Erro ao limpar dados: ' + error.message, 'error');
             } finally {
                 Utils.showLoading(false);
             }
-        }, 1000);
-        
+        }, 500);
     } catch (error) {
         Utils.showLoading(false);
         Toast.show('Erro ao processar limpeza: ' + error.message, 'error');
     }
 }
 
-function gerarRelatorioMetas() {
+function gerarRelatorio(tipo) {
     try {
         Utils.showLoading(true);
-        
-        const metas = DB.metas.getAll();
-        
-        if (metas.length === 0) {
-            Toast.show('Nenhuma meta encontrada para gerar relatório', 'warning');
-            return;
-        }
-        
-        const dadosFormatados = metas.map(meta => {
-            const frente = DB.frentes.get(meta.frenteId);
-            const frenteNome = frente ? frente.nome : 'Frente não encontrada';
-            const fazendaNome = frente ? frente.fazenda : '-';
-            const tipoConfig = Utils.getTipoConfig(meta.tipo);
-            
-            const totalColhido = DB.lancamentos.getTotalColhidoPorFrente(
-                meta.frenteId, 
-                meta.dataInicio, 
-                meta.dataFim
-            );
-            
-            const percentualAtingido = Number(meta.valor) > 0 ? (totalColhido / Number(meta.valor)) * 100 : 0;
-            const statusMeta = Utils.getStatusMeta(percentualAtingido);
-            
-            return {
-                frente: frenteNome,
-                fazenda: fazendaNome,
-                tipo: tipoConfig.texto,
-                periodo: meta.periodo.charAt(0).toUpperCase() + meta.periodo.slice(1),
-                meta: Utils.formatarToneladas(meta.valor),
-                colhido: Utils.formatarToneladas(totalColhido),
-                percentual: percentualAtingido.toFixed(1) + '%',
-                status: statusMeta.texto,
-                dataInicio: Utils.formatarData(meta.dataInicio),
-                dataFim: Utils.formatarData(meta.dataFim),
-                observacoes: meta.observacoes || '-'
-            };
-        });
-        
-        const colunas = [
-            { header: 'Frente', dataKey: 'frente' },
-            { header: 'Fazenda', dataKey: 'fazenda' },
-            { header: 'Tipo', dataKey: 'tipo' },
-            { header: 'Período', dataKey: 'periodo' },
-            { header: 'Meta (T)', dataKey: 'meta' },
-            { header: 'Colhido (T)', dataKey: 'colhido' },
-            { header: '% Atingido', dataKey: 'percentual' },
-            { header: 'Status', dataKey: 'status' },
-            { header: 'Data Início', dataKey: 'dataInicio' },
-            { header: 'Data Fim', dataKey: 'dataFim' },
-            { header: 'Observações', dataKey: 'observacoes' }
-        ];
         
         setTimeout(() => {
-            Utils.exportarPDF('Relatório Completo de Metas', dadosFormatados, colunas, `relatorio_metas_${new Date().toISOString().split('T')[0]}.pdf`);
-            Utils.showLoading(false);
-        }, 500);
-        
-    } catch (error) {
-        Utils.showLoading(false);
-        Toast.show('Erro ao gerar relatório de metas: ' + error.message, 'error');
-    }
-}
-
-function gerarRelatorioColheita() {
-    try {
-        Utils.showLoading(true);
-        
-        const lancamentos = DB.lancamentos.getAll();
-        
-        if (lancamentos.length === 0) {
-            Toast.show('Nenhum lançamento encontrado para gerar relatório', 'warning');
-            return;
-        }
-        
-        const dadosFormatados = lancamentos
-            .sort((a, b) => new Date(b.data) - new Date(a.data))
-            .map(lancamento => {
-                const frente = DB.frentes.get(lancamento.frenteId);
-                const frenteNome = frente ? frente.nome : 'Frente não encontrada';
-                const fazendaNome = frente ? frente.fazenda : '-';
-                const tipoConfig = frente ? Utils.getTipoConfig(frente.tipo) : Utils.getTipoConfig('propria');
+            try {
+                let dados = [];
+                let colunas = [];
+                let titulo = '';
+                let nomeArquivo = '';
                 
-                return {
-                    data: Utils.formatarData(lancamento.data),
-                    frente: frenteNome,
-                    fazenda: fazendaNome,
-                    tipo: tipoConfig.texto,
-                    colhido: Utils.formatarToneladas(lancamento.colhido),
-                    turno: lancamento.turno.charAt(0).toUpperCase() + lancamento.turno.slice(1),
-                    operador: lancamento.operador || '-',
-                    observacoes: lancamento.observacoes || '-'
-                };
-            });
-        
-        const totalColhido = lancamentos.reduce((sum, l) => sum + Number(l.colhido), 0);
-        dadosFormatados.push({
-            data: '--- TOTAL GERAL ---',
-            frente: '',
-            fazenda: '',
-            tipo: '',
-            colhido: Utils.formatarToneladas(totalColhido),
-            turno: '',
-            operador: '',
-            observacoes: `${lancamentos.length} lançamento(s)`
-        });
-        
-        const colunas = [
-            { header: 'Data', dataKey: 'data' },
-            { header: 'Frente', dataKey: 'frente' },
-            { header: 'Fazenda', dataKey: 'fazenda' },
-            { header: 'Tipo', dataKey: 'tipo' },
-            { header: 'Colhido (T)', dataKey: 'colhido' },
-            { header: 'Turno', dataKey: 'turno' },
-            { header: 'Operador', dataKey: 'operador' },
-            { header: 'Observações', dataKey: 'observacoes' }
-        ];
-        
-        setTimeout(() => {
-            Utils.exportarPDF('Relatório de Colheita Diária', dadosFormatados, colunas, `relatorio_colheita_${new Date().toISOString().split('T')[0]}.pdf`);
-            Utils.showLoading(false);
+                switch (tipo) {
+                    case 'liberacoes':
+                        dados = DB.liberacoes.getAll().map(lib => {
+                            const statusConfig = Utils.getStatusConfig(lib.status);
+                            const progresso = Number(lib.previsto) > 0 ? 
+                                (Number(lib.realizado) / Number(lib.previsto)) * 100 : 0;
+                            
+                            return {
+                                frente: lib.frente,
+                                fazenda: lib.fazenda,
+                                numero: lib.numero || '-',
+                                status: statusConfig.texto,
+                                data: Utils.formatarData(lib.data),
+                                previsto: Utils.formatarToneladas(lib.previsto),
+                                realizado: Utils.formatarToneladas(lib.realizado),
+                                restante: Utils.formatarToneladas(lib.restante),
+                                progresso: progresso.toFixed(1) + '%'
+                            };
+                        });
+                        
+                        colunas = [
+                            { header: 'Frente', dataKey: 'frente' },
+                            { header: 'Fazenda', dataKey: 'fazenda' },
+                            { header: 'Número', dataKey: 'numero' },
+                            { header: 'Status', dataKey: 'status' },
+                            { header: 'Data', dataKey: 'data' },
+                            { header: 'Previsto', dataKey: 'previsto' },
+                            { header: 'Realizado', dataKey: 'realizado' },
+                            { header: 'Restante', dataKey: 'restante' },
+                            { header: 'Progresso', dataKey: 'progresso' }
+                        ];
+                        
+                        titulo = 'Relatório Completo de Liberações';
+                        nomeArquivo = `relatorio_liberacoes_${new Date().toISOString().split('T')[0]}.pdf`;
+                        break;
+                        
+                    case 'metas':
+                        dados = DB.metas.getAll().map(meta => {
+                            const frente = DB.frentes.get(meta.frenteId);
+                            const frenteNome = frente ? frente.nome : 'Frente não encontrada';
+                            const tipoConfig = Utils.getTipoConfig(meta.tipo);
+                            
+                            const hoje = new Date().toISOString().split('T')[0];
+                            const isAtiva = meta.dataInicio <= hoje && meta.dataFim >= hoje;
+                            
+                            return {
+                                frente: frenteNome,
+                                tipo: tipoConfig.texto,
+                                periodo: meta.periodo.charAt(0).toUpperCase() + meta.periodo.slice(1),
+                                valor: Utils.formatarToneladas(meta.valor),
+                                dataInicio: Utils.formatarData(meta.dataInicio),
+                                dataFim: Utils.formatarData(meta.dataFim),
+                                status: isAtiva ? 'Ativa' : 'Inativa',
+                                observacoes: meta.observacoes || '-'
+                            };
+                        });
+                        
+                        colunas = [
+                            { header: 'Frente', dataKey: 'frente' },
+                            { header: 'Tipo', dataKey: 'tipo' },
+                            { header: 'Período', dataKey: 'periodo' },
+                            { header: 'Meta (T)', dataKey: 'valor' },
+                            { header: 'Data Início', dataKey: 'dataInicio' },
+                            { header: 'Data Fim', dataKey: 'dataFim' },
+                            { header: 'Status', dataKey: 'status' },
+                            { header: 'Observações', dataKey: 'observacoes' }
+                        ];
+                        
+                        titulo = 'Relatório Completo de Metas';
+                        nomeArquivo = `relatorio_metas_${new Date().toISOString().split('T')[0]}.pdf`;
+                        break;
+                        
+                    case 'colheita':
+                        dados = DB.lancamentos.getAll().map(lanc => {
+                            const frente = DB.frentes.get(lanc.frenteId);
+                            const frenteNome = frente ? frente.nome : 'Frente não encontrada';
+                            const tipoConfig = frente ? Utils.getTipoConfig(frente.tipo) : Utils.getTipoConfig('desconhecido');
+                            
+                            return {
+                                data: Utils.formatarData(lanc.data),
+                                frente: frenteNome,
+                                tipo: tipoConfig.texto,
+                                colhido: Utils.formatarToneladas(lanc.colhido),
+                                turno: lanc.turno.charAt(0).toUpperCase() + lanc.turno.slice(1),
+                                operador: lanc.operador || '-',
+                                observacoes: lanc.observacoes || '-'
+                            };
+                        });
+                        
+                        colunas = [
+                            { header: 'Data', dataKey: 'data' },
+                            { header: 'Frente', dataKey: 'frente' },
+                            { header: 'Tipo', dataKey: 'tipo' },
+                            { header: 'Colhido (T)', dataKey: 'colhido' },
+                            { header: 'Turno', dataKey: 'turno' },
+                            { header: 'Operador', dataKey: 'operador' },
+                            { header: 'Observações', dataKey: 'observacoes' }
+                        ];
+                        
+                        titulo = 'Relatório Completo de Colheita';
+                        nomeArquivo = `relatorio_colheita_${new Date().toISOString().split('T')[0]}.pdf`;
+                        break;
+                }
+                
+                if (dados.length === 0) {
+                    Toast.show('Nenhum dado encontrado para gerar o relatório', 'warning');
+                    return;
+                }
+                
+                Utils.exportarPDF(titulo, dados, colunas, nomeArquivo);
+            } catch (error) {
+                Toast.show('Erro ao gerar relatório: ' + error.message, 'error');
+            } finally {
+                Utils.showLoading(false);
+            }
         }, 500);
-        
     } catch (error) {
         Utils.showLoading(false);
-        Toast.show('Erro ao gerar relatório de colheita: ' + error.message, 'error');
+        Toast.show('Erro ao preparar relatório: ' + error.message, 'error');
     }
 }
 
-// ===== FUNÇÕES AUXILIARES FINAIS =====
+// ===== EVENTOS GLOBAIS =====
 
-// Função para detectar dispositivos móveis
-function isMobileDevice() {
-    return window.innerWidth <= 768;
-}
-
-// Função para formatar números grandes
-function formatarNumeroGrande(numero) {
-    if (numero >= 1000000) {
-        return (numero / 1000000).toFixed(1) + 'M';
-    }
-    if (numero >= 1000) {
-        return (numero / 1000).toFixed(1) + 'K';
-    }
-    return numero.toString();
-}
-
-// Função para calcular dias úteis entre duas datas
-function calcularDiasUteis(dataInicio, dataFim) {
-    const inicio = new Date(dataInicio);
-    const fim = new Date(dataFim);
-    let diasUteis = 0;
-    
-    for (let data = new Date(inicio); data <= fim; data.setDate(data.getDate() + 1)) {
-        const diaSemana = data.getDay();
-        if (diaSemana !== 0 && diaSemana !== 6) { // 0 = domingo, 6 = sábado
-            diasUteis++;
+// Fechar modais com ESC
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        // Fechar modal de notificações
+        const modalNotifications = document.getElementById('modal-notifications');
+        if (modalNotifications && !modalNotifications.classList.contains('hidden')) {
+            modalNotifications.classList.add('hidden');
+        }
+        
+        // Fechar modal de limpeza
+        const modalLimpeza = document.getElementById('modal-limpar-dados');
+        if (modalLimpeza && !modalLimpeza.classList.contains('hidden')) {
+            fecharModalLimpeza();
+        }
+        
+        // Fechar menu lateral no mobile
+        const appContainer = document.getElementById('app-container');
+        if (appContainer && appContainer.classList.contains('sidebar-open')) {
+            appContainer.classList.remove('sidebar-open');
         }
     }
+});
+
+// Atualizar gráficos quando o tema mudar
+document.addEventListener('DOMContentLoaded', function() {
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                if (mutation.target === document.documentElement) {
+                    setTimeout(() => {
+                        ChartManager.updateCharts();
+                    }, 100);
+                }
+            }
+        });
+    });
     
-    return diasUteis;
-}
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
+    });
+});
 
-// Função para verificar se uma data está no período
-function dataEstaNoPeriodo(data, dataInicio, dataFim) {
-    return data >= dataInicio && data <= dataFim;
-}
+// Salvar configurações de paginação
+window.addEventListener('beforeunload', function() {
+    const config = JSON.parse(localStorage.getItem('ggomes_config') || '{}');
+    config.preferences = config.preferences || {};
+    config.preferences.currentPage = currentLiberacoesPage;
+    config.preferences.sortConfig = currentLiberacoesSort;
+    localStorage.setItem('ggomes_config', JSON.stringify(config));
+});
 
-// Eventos de redimensionamento da janela
-window.addEventListener('resize', function() {
-    const appContainer = document.getElementById('app-container');
-    if (window.innerWidth > 768 && appContainer?.classList.contains('sidebar-open')) {
-        appContainer.classList.remove('sidebar-open');
+// Detectar mudanças na conexão (se aplicável)
+window.addEventListener('online', function() {
+    Toast.show('Conexão restaurada', 'success', 3000);
+});
+
+window.addEventListener('offline', function() {
+    Toast.show('Sem conexão - modo offline', 'warning', 5000);
+});
+
+// Evitar perda de dados não salvos
+window.addEventListener('beforeunload', function(event) {
+    const formsEditando = document.querySelectorAll('form[data-editing]');
+    if (formsEditando.length > 0) {
+        const message = 'Você tem alterações não salvas. Deseja realmente sair?';
+        event.returnValue = message;
+        return message;
     }
 });
 
-// Prevenção de zoom no iOS em campos de input
-document.addEventListener('touchstart', function() {}, true);
+// Performance: Lazy loading de componentes pesados
+let dashboardLoaded = false;
+const originalAtualizarDashboard = atualizarDashboard;
+atualizarDashboard = function() {
+    if (!dashboardLoaded) {
+        dashboardLoaded = true;
+        setTimeout(() => {
+            originalAtualizarDashboard();
+        }, 100);
+    } else {
+        originalAtualizarDashboard();
+    }
+};
 
-// Função de limpeza ao fechar a aplicação
-window.addEventListener('beforeunload', function() {
-    DB.updateLastAccess();
-});
+console.log('GGOMES-LOG v2.1 - Sistema de Gestão Agrícola iniciado com sucesso!');
+console.log('Desenvolvido com ❤️ pela GGOMES Technologies');
+console.log('Novidades da v2.1: Tipo "Desconhecido" adicionado às frentes');
 
-// Log de inicialização completa
-console.log(`%c🌾 GGOMES-LOG v${AppConfig.version} 🌾`, 'color: #5D5CDE; font-size: 16px; font-weight: bold;');
-console.log('%cSistema de Gestão Agrícola inicializado com sucesso!', 'color: #10b981; font-size: 12px;');
-console.log('%cDesenvolvido por: GGOMES Technologies', 'color: #6b7280; font-size: 10px;');
-
-// Exportar algumas funções para debug no console (apenas em desenvolvimento)
-if (typeof window !== 'undefined') {
-    window.GGOMES_DEBUG = {
-        DB,
-        Utils,
-        Toast,
-        NotificationManager,
-        ChartManager,
-        AppConfig
-    };
-}
 </script>
-
 </body>
 </html>
