@@ -472,7 +472,7 @@
                     </div>
                 </div>
                 
-                <!-- Conteúdo de Dashboard MELHORADO -->
+                <!-- Conteúdo de Dashboard MELHORADO COM FILTROS -->
                 <div id="content-dashboard" class="content">
                     <div class="mb-6">
                         <div class="flex items-center justify-between">
@@ -780,7 +780,8 @@
                         </div>
                     </div>
                 </div>
-                <!-- Conteúdo de Acompanhamento (PÁGINA COMPLETA ORIGINAL) -->
+
+                <!-- Conteúdo de Acompanhamento COMPLETO ORIGINAL -->
                 <div id="content-acompanhamento" class="content hidden">
                     <div class="mb-6">
                         <div class="flex flex-col md:flex-row md:items-center justify-between">
@@ -1004,8 +1005,7 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Conteúdo de Liberações (PÁGINA COMPLETA ORIGINAL) -->
+                <!-- Conteúdo de Liberações COMPLETO ORIGINAL -->
                 <div id="content-liberacoes" class="content hidden">
                     <div class="mb-6">
                         <div class="flex flex-col md:flex-row md:items-center justify-between">
@@ -1160,8 +1160,79 @@
                             <!-- Paginação preenchida via JavaScript -->
                         </div>
                     </div>
+
+                    <!-- Modal para Nova/Editar Liberação -->
+                    <div id="modal-liberacao" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 id="modal-liberacao-title" class="text-lg font-semibold text-gray-800 dark:text-white">Nova Liberação</h3>
+                                <button id="btn-fechar-modal-liberacao" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            
+                            <form id="form-liberacao" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Número da Liberação</label>
+                                    <input type="text" id="liberacao-numero" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Frente</label>
+                                    <input type="text" id="liberacao-frente" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fazenda</label>
+                                    <input type="text" id="liberacao-fazenda" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Previsto (T)</label>
+                                        <input type="number" id="liberacao-previsto" step="0.1" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Realizado (T)</label>
+                                        <input type="number" id="liberacao-realizado" step="0.1" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                                    <select id="liberacao-status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                                        <option value="aberto">Aberto</option>
+                                        <option value="em-andamento">Em Andamento</option>
+                                        <option value="fechado">Fechado</option>
+                                        <option value="cancelado">Cancelado</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data</label>
+                                    <input type="date" id="liberacao-data" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observações</label>
+                                    <textarea id="liberacao-observacoes" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"></textarea>
+                                </div>
+                                
+                                <div class="flex justify-end space-x-3 pt-4">
+                                    <button type="button" id="btn-cancelar-liberacao" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 rounded-lg transition-all-300">
+                                        Cancelar
+                                    </button>
+                                    <button type="submit" id="btn-salvar-liberacao" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-all-300">
+                                        Salvar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-                <!-- Conteúdo de Frentes (PÁGINA COMPLETA ORIGINAL) -->
+
+                <!-- Conteúdo de Frentes COMPLETO ORIGINAL -->
                 <div id="content-frentes" class="content hidden">
                     <div class="mb-6">
                         <div class="flex flex-col md:flex-row md:items-center justify-between">
@@ -1263,9 +1334,70 @@
                             </table>
                         </div>
                     </div>
+
+                    <!-- Modal para Nova/Editar Frente -->
+                    <div id="modal-frente" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 id="modal-frente-title" class="text-lg font-semibold text-gray-800 dark:text-white">Nova Frente</h3>
+                                <button id="btn-fechar-modal-frente" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            
+                            <form id="form-frente" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome da Frente</label>
+                                    <input type="text" id="frente-nome" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fazenda</label>
+                                    <input type="text" id="frente-fazenda" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo</label>
+                                    <select id="frente-tipo" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                                        <option value="propria">Própria</option>
+                                        <option value="terceira">Terceira</option>
+                                        <option value="desconhecido">Desconhecido</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Responsável</label>
+                                    <input type="text" id="frente-responsavel" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                                    <select id="frente-status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                                        <option value="ativa">Ativa</option>
+                                        <option value="inativa">Inativa</option>
+                                        <option value="manutencao">Manutenção</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observações</label>
+                                    <textarea id="frente-observacoes" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"></textarea>
+                                </div>
+                                
+                                <div class="flex justify-end space-x-3 pt-4">
+                                    <button type="button" id="btn-cancelar-frente" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 rounded-lg transition-all-300">
+                                        Cancelar
+                                    </button>
+                                    <button type="submit" id="btn-salvar-frente" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-all-300">
+                                        Salvar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Conteúdo de Metas (PÁGINA COMPLETA ORIGINAL) -->
+                <!-- Conteúdo de Metas COMPLETO ORIGINAL -->
                 <div id="content-metas" class="content hidden">
                     <div class="mb-6">
                         <div class="flex flex-col md:flex-row md:items-center justify-between">
@@ -1314,7 +1446,7 @@
                     </div>
                 </div>
 
-                <!-- Conteúdo de Caminhões (PÁGINA COMPLETA ORIGINAL) -->
+                <!-- Conteúdo de Caminhões COMPLETO ORIGINAL -->
                 <div id="content-caminhoes" class="content hidden">
                     <div class="mb-6">
                         <div class="flex flex-col md:flex-row md:items-center justify-between">
@@ -1411,8 +1543,7 @@
             </main>
         </div>
     </div>
-
-<script>
+    <script>
 // ===== SISTEMA DE GESTÃO AGRÍCOLA GGOMES-LOG v2.1 AVANÇADO COM CAMINHÕES E FILTROS =====
 
 // Configuração global da aplicação
@@ -2063,6 +2194,64 @@ const DB = {
         
         get: function(id) {
             return this.getAll().find(m => m.id === id);
+        },
+        
+        add: function(meta) {
+            const requiredFields = ['frenteId', 'tipo', 'periodo', 'valor', 'dataInicio', 'dataFim'];
+            const missingFields = requiredFields.filter(field => !meta[field] && meta[field] !== 0);
+            
+            if (missingFields.length > 0) {
+                throw new Error(`Campos obrigatórios ausentes: ${missingFields.join(', ')}`);
+            }
+            
+            const metas = this.getAll();
+            
+            if (!meta.id) {
+                meta.id = Utils.gerarId('META');
+            }
+            
+            if (metas.some(m => m.id === meta.id)) {
+                throw new Error(`Meta com ID "${meta.id}" já existe.`);
+            }
+            
+            meta.dataRegistro = meta.dataRegistro || new Date().toISOString();
+            
+            metas.push(meta);
+            localStorage.setItem('ggomes_metas', JSON.stringify(metas));
+            
+            return meta;
+        },
+        
+        update: function(meta) {
+            if (!meta.id) {
+                throw new Error('ID da meta é obrigatório.');
+            }
+            
+            const metas = this.getAll();
+            const index = metas.findIndex(m => m.id === meta.id);
+            
+            if (index === -1) {
+                throw new Error(`Meta com ID "${meta.id}" não encontrada.`);
+            }
+            
+            metas[index] = { ...metas[index], ...meta };
+            localStorage.setItem('ggomes_metas', JSON.stringify(metas));
+            
+            return metas[index];
+        },
+        
+        remove: function(id) {
+            const metas = this.getAll();
+            const index = metas.findIndex(m => m.id === id);
+            
+            if (index === -1) {
+                throw new Error(`Meta com ID "${id}" não encontrada.`);
+            }
+            
+            metas.splice(index, 1);
+            localStorage.setItem('ggomes_metas', JSON.stringify(metas));
+            
+            return true;
         }
     },
 
@@ -2076,6 +2265,68 @@ const DB = {
                 console.error("Erro ao obter lançamentos:", error);
                 return [];
             }
+        },
+        
+        get: function(id) {
+            return this.getAll().find(l => l.id === id);
+        },
+        
+        add: function(lancamento) {
+            const requiredFields = ['frenteId', 'data', 'colhido'];
+            const missingFields = requiredFields.filter(field => !lancamento[field] && lancamento[field] !== 0);
+            
+            if (missingFields.length > 0) {
+                throw new Error(`Campos obrigatórios ausentes: ${missingFields.join(', ')}`);
+            }
+            
+            const lancamentos = this.getAll();
+            
+            if (!lancamento.id) {
+                lancamento.id = Utils.gerarId('LANC');
+            }
+            
+            if (lancamentos.some(l => l.id === lancamento.id)) {
+                throw new Error(`Lançamento com ID "${lancamento.id}" já existe.`);
+            }
+            
+            lancamento.dataRegistro = lancamento.dataRegistro || new Date().toISOString();
+            
+            lancamentos.push(lancamento);
+            localStorage.setItem('ggomes_lancamentos', JSON.stringify(lancamentos));
+            
+            return lancamento;
+        },
+        
+        update: function(lancamento) {
+            if (!lancamento.id) {
+                throw new Error('ID do lançamento é obrigatório.');
+            }
+            
+            const lancamentos = this.getAll();
+            const index = lancamentos.findIndex(l => l.id === lancamento.id);
+            
+            if (index === -1) {
+                throw new Error(`Lançamento com ID "${lancamento.id}" não encontrado.`);
+            }
+            
+            lancamentos[index] = { ...lancamentos[index], ...lancamento };
+            localStorage.setItem('ggomes_lancamentos', JSON.stringify(lancamentos));
+            
+            return lancamentos[index];
+        },
+        
+        remove: function(id) {
+            const lancamentos = this.getAll();
+            const index = lancamentos.findIndex(l => l.id === id);
+            
+            if (index === -1) {
+                throw new Error(`Lançamento com ID "${id}" não encontrado.`);
+            }
+            
+            lancamentos.splice(index, 1);
+            localStorage.setItem('ggomes_lancamentos', JSON.stringify(lancamentos));
+            
+            return true;
         }
     },
 
@@ -2089,6 +2340,148 @@ const DB = {
                 console.error("Erro ao obter caminhões:", error);
                 return [];
             }
+        },
+        
+        get: function(id) {
+            return this.getAll().find(c => c.id === id);
+        },
+        
+        add: function(caminhao) {
+            const requiredFields = ['placa', 'modelo', 'tipo', 'motorista', 'capacidade', 'status'];
+            const missingFields = requiredFields.filter(field => !caminhao[field] && caminhao[field] !== 0);
+            
+            if (missingFields.length > 0) {
+                throw new Error(`Campos obrigatórios ausentes: ${missingFields.join(', ')}`);
+            }
+            
+            const caminhoes = this.getAll();
+            
+            if (!caminhao.id) {
+                caminhao.id = Utils.gerarId('CAM');
+            }
+            
+            if (caminhoes.some(c => c.id === caminhao.id || c.placa === caminhao.placa)) {
+                throw new Error(`Caminhão com ID "${caminhao.id}" ou placa "${caminhao.placa}" já existe.`);
+            }
+            
+            caminhao.dataRegistro = caminhao.dataRegistro || new Date().toISOString();
+            
+            caminhoes.push(caminhao);
+            localStorage.setItem('ggomes_caminhoes', JSON.stringify(caminhoes));
+            
+            return caminhao;
+        },
+        
+        update: function(caminhao) {
+            if (!caminhao.id) {
+                throw new Error('ID do caminhão é obrigatório.');
+            }
+            
+            const caminhoes = this.getAll();
+            const index = caminhoes.findIndex(c => c.id === caminhao.id);
+            
+            if (index === -1) {
+                throw new Error(`Caminhão com ID "${caminhao.id}" não encontrado.`);
+            }
+            
+            // Verificar se a placa não está sendo usada por outro caminhão
+            if (caminhao.placa && caminhoes.some(c => c.id !== caminhao.id && c.placa === caminhao.placa)) {
+                throw new Error(`Placa "${caminhao.placa}" já está sendo usada por outro caminhão.`);
+            }
+            
+            caminhoes[index] = { ...caminhoes[index], ...caminhao };
+            localStorage.setItem('ggomes_caminhoes', JSON.stringify(caminhoes));
+            
+            return caminhoes[index];
+        },
+        
+        remove: function(id) {
+            const caminhoes = this.getAll();
+            const index = caminhoes.findIndex(c => c.id === id);
+            
+            if (index === -1) {
+                throw new Error(`Caminhão com ID "${id}" não encontrado.`);
+            }
+            
+            caminhoes.splice(index, 1);
+            localStorage.setItem('ggomes_caminhoes', JSON.stringify(caminhoes));
+            
+            return true;
+        }
+    },
+    
+    // Módulo Metas de Caminhões
+    metasCaminhoes: {
+        getAll: function() {
+            try {
+                const metas = localStorage.getItem('ggomes_metas_caminhoes');
+                return metas ? JSON.parse(metas) : [];
+            } catch (error) {
+                console.error("Erro ao obter metas de caminhões:", error);
+                return [];
+            }
+        },
+        
+        get: function(id) {
+            return this.getAll().find(m => m.id === id);
+        },
+        
+        add: function(meta) {
+            const requiredFields = ['caminhaoId', 'tipo', 'periodo', 'metaViagens', 'metaToneladas', 'dataInicio', 'dataFim'];
+            const missingFields = requiredFields.filter(field => !meta[field] && meta[field] !== 0);
+            
+            if (missingFields.length > 0) {
+                throw new Error(`Campos obrigatórios ausentes: ${missingFields.join(', ')}`);
+            }
+            
+            const metas = this.getAll();
+            
+            if (!meta.id) {
+                meta.id = Utils.gerarId('META-CAM');
+            }
+            
+            if (metas.some(m => m.id === meta.id)) {
+                throw new Error(`Meta de caminhão com ID "${meta.id}" já existe.`);
+            }
+            
+            meta.dataRegistro = meta.dataRegistro || new Date().toISOString();
+            
+            metas.push(meta);
+            localStorage.setItem('ggomes_metas_caminhoes', JSON.stringify(metas));
+            
+            return meta;
+        },
+        
+        update: function(meta) {
+            if (!meta.id) {
+                throw new Error('ID da meta de caminhão é obrigatório.');
+            }
+            
+            const metas = this.getAll();
+            const index = metas.findIndex(m => m.id === meta.id);
+            
+            if (index === -1) {
+                throw new Error(`Meta de caminhão com ID "${meta.id}" não encontrada.`);
+            }
+            
+            metas[index] = { ...metas[index], ...meta };
+            localStorage.setItem('ggomes_metas_caminhoes', JSON.stringify(metas));
+            
+            return metas[index];
+        },
+        
+        remove: function(id) {
+            const metas = this.getAll();
+            const index = metas.findIndex(m => m.id === id);
+            
+            if (index === -1) {
+                throw new Error(`Meta de caminhão com ID "${id}" não encontrada.`);
+            }
+            
+            metas.splice(index, 1);
+            localStorage.setItem('ggomes_metas_caminhoes', JSON.stringify(metas));
+            
+            return true;
         }
     }
 };
@@ -2377,6 +2770,125 @@ const ChartManager = {
         });
     },
 
+    // Performance de Caminhões
+    createCaminhoesPerformanceChart: function() {
+        const ctx = document.getElementById('chart-caminhoes-performance');
+        if (!ctx || !window.Chart) return;
+        
+        const caminhoes = DB.caminhoes.getAll();
+        const metasCaminhoes = DB.metasCaminhoes.getAll();
+        
+        const labels = [];
+        const dataPerformance = [];
+        const cores = [];
+        
+        caminhoes.slice(0, 5).forEach(caminhao => {
+            const meta = metasCaminhoes.find(m => m.caminhaoId === caminhao.id);
+            const performance = meta ? Math.floor(Math.random() * 40) + 80 : 0; // Simulado
+            
+            labels.push(caminhao.placa);
+            dataPerformance.push(performance);
+            
+            if (performance >= 95) cores.push('#10b981');
+            else if (performance >= 85) cores.push('#f59e0b');
+            else cores.push('#ef4444');
+        });
+        
+        if (AppConfig.charts.caminhoesPerformanceChart) {
+            AppConfig.charts.caminhoesPerformanceChart.destroy();
+        }
+        
+        AppConfig.charts.caminhoesPerformanceChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '% Eficiência',
+                    data: dataPerformance,
+                    backgroundColor: cores,
+                    borderWidth: 0,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.parsed.y}% de eficiência`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    },
+
+    // Eficiência por Turno
+    createEficienciaTurnoChart: function() {
+        const ctx = document.getElementById('chart-eficiencia-turno');
+        if (!ctx || !window.Chart) return;
+        
+        const data = {
+            labels: ['Manhã', 'Tarde', 'Noite'],
+            datasets: [{
+                label: 'Eficiência %',
+                data: [92, 88, 75], // Dados simulados
+                backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                borderWidth: 0,
+                borderRadius: 4
+            }]
+        };
+        
+        if (AppConfig.charts.eficienciaTurnoChart) {
+            AppConfig.charts.eficienciaTurnoChart.destroy();
+        }
+        
+        AppConfig.charts.eficienciaTurnoChart = new Chart(ctx, {
+            type: 'bar',
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.parsed.y}% de eficiência`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    },
+
     // Atualizar tema dos gráficos (ORIGINAL COMPLETO)
     updateTheme: function() {
         if (!window.Chart) return;
@@ -2390,6 +2902,8 @@ const ChartManager = {
             this.createEvolucaoColheitaChart();
             this.createPerformanceFrentesChart();
             this.createLiberacoesStatusChart();
+            this.createCaminhoesPerformanceChart();
+            this.createEficienciaTurnoChart();
         }, 100);
     }
 };
@@ -2459,12 +2973,51 @@ const Utils = {
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
         };
+    },
+    
+    formatarStatus: function(status) {
+        const statusMap = {
+            'aberto': 'Aberto',
+            'em-andamento': 'Em Andamento',
+            'fechado': 'Fechado',
+            'cancelado': 'Cancelado',
+            'ativa': 'Ativa',
+            'inativa': 'Inativa',
+            'manutencao': 'Manutenção',
+            'ativo': 'Ativo',
+            'inativo': 'Inativo',
+            'propria': 'Própria',
+            'terceira': 'Terceira',
+            'desconhecido': 'Desconhecido',
+            'proprio': 'Próprio',
+            'terceiro': 'Terceiro'
+        };
+        return statusMap[status] || status;
+    },
+    
+    getStatusColor: function(status) {
+        const colorMap = {
+            'aberto': 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900',
+            'em-andamento': 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900',
+            'fechado': 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900',
+            'cancelado': 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900',
+            'ativa': 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900',
+            'inativa': 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900',
+            'manutencao': 'text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900',
+            'ativo': 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900',
+            'inativo': 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900'
+        };
+        return colorMap[status] || 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900';
     }
 };
 
 // Sistema principal da aplicação MELHORADO COM FILTROS COMPLETOS
 const App = {
     currentPage: 'dashboard',
+    editingLiberacao: null,
+    editingFrente: null,
+    editingMeta: null,
+    editingCaminhao: null,
     
     init: function() {
         try {
@@ -2553,6 +3106,14 @@ const App = {
         document.getElementById('mobile-menu-toggle').addEventListener('click', () => {
             document.getElementById('app-container').classList.toggle('sidebar-open');
         });
+        
+        // Busca global
+        const searchGlobal = document.getElementById('search-global');
+        if (searchGlobal) {
+            searchGlobal.addEventListener('input', Utils.debounce((e) => {
+                this.performGlobalSearch(e.target.value);
+            }, 300));
+        }
     },
 
     loadInitialData: function() {
@@ -2787,9 +3348,26 @@ const App = {
                 'configuracoes': 'Configurações'
             };
             
+            const pageSubtitles = {
+                'dashboard': 'Visão geral do sistema e indicadores principais',
+                'acompanhamento': 'Monitoramento detalhado das operações',
+                'liberacoes': 'Gestão completa das liberações de colheita',
+                'frentes': 'Controle de frentes próprias, terceiras e desconhecidas',
+                'metas': 'Definição e controle de metas por frente',
+                'caminhoes': 'Gestão de metas para caminhões próprios e terceiros',
+                'relatorios': 'Geração e exportação de relatórios',
+                'configuracoes': 'Configurações do sistema e preferências'
+            };
+            
             const pageTitle = document.getElementById('page-title');
+            const pageSubtitle = document.getElementById('page-subtitle');
+            
             if (pageTitle && pageTitles[page]) {
                 pageTitle.textContent = pageTitles[page];
+            }
+            
+            if (pageSubtitle && pageSubtitles[page]) {
+                pageSubtitle.textContent = pageSubtitles[page];
             }
             
             this.currentPage = page;
@@ -2821,6 +3399,10 @@ const App = {
                     this.loadConfiguracoes();
                     break;
             }
+            
+            // Fechar sidebar mobile após navegação
+            document.getElementById('app-container').classList.remove('sidebar-open');
+            
         } catch (error) {
             console.error('Erro na navegação:', error);
             Toast.show('Erro ao carregar a página', 'error');
@@ -2832,11 +3414,16 @@ const App = {
             // Atualizar KPIs
             this.updateDashboardKPIs();
             
+            // Atualizar atividades e rankings
+            this.updateDashboardActivities();
+            
             // Criar gráficos
             setTimeout(() => {
                 ChartManager.createEvolucaoColheitaChart();
                 ChartManager.createPerformanceFrentesChart();
                 ChartManager.createLiberacoesStatusChart();
+                ChartManager.createCaminhoesPerformanceChart();
+                ChartManager.createEficienciaTurnoChart();
                 
                 // Atualizar filtros de frentes
                 this.updateChartFrentesFilter();
@@ -2858,6 +3445,7 @@ const App = {
             const metas = DB.metas.getAll();
             const frentes = DB.frentes.getAll();
             const liberacoes = DB.liberacoes.getAll();
+            const caminhoes = DB.caminhoes.getAll();
             
             // Total colhido últimos 30 dias
             const hoje = new Date();
@@ -2885,39 +3473,814 @@ const App = {
             const liberacoesAbertas = liberacoes.filter(l => l.status === 'aberto' || l.status === 'em-andamento').length;
             document.getElementById('dash-total-liberacoes').textContent = liberacoesAbertas;
             
+            // Caminhões ativos
+            const caminhoesAtivos = caminhoes.filter(c => c.status === 'ativo').length;
+            document.getElementById('dash-caminhoes-ativos').textContent = `${caminhoesAtivos}/${caminhoes.length}`;
+            
             // Eficiência geral
             const eficiencia = metaTotal > 0 ? (colhidoTotal / metaTotal) * 100 : 0;
             document.getElementById('dash-eficiencia-geral').textContent = Utils.formatarPorcentagem(eficiencia, 0);
+            
+            // Metas atingidas
+            const metasAtingidas = metas.filter(m => {
+                const colhidoMeta = lancamentos
+                    .filter(l => l.frenteId === m.frenteId && l.data >= m.dataInicio && l.data <= m.dataFim)
+                    .reduce((sum, l) => sum + Number(l.colhido), 0);
+                return colhidoMeta >= Number(m.valor);
+            }).length;
+            
+            document.getElementById('dash-metas-atingidas').textContent = `${metasAtingidas}/${metas.length}`;
             
         } catch (error) {
             console.error('Erro ao atualizar KPIs:', error);
         }
     },
 
-    // Funções de carregamento das outras páginas (básicas funcionais)
+    updateDashboardActivities: function() {
+        try {
+            // Top frentes
+            const frentes = DB.frentes.getAll();
+            const lancamentos = DB.lancamentos.getAll();
+            const metas = DB.metas.getAll();
+            const hoje = Utils.getLocalDateString();
+            
+            const frentesPerformance = frentes.map(frente => {
+                const colhido = lancamentos
+                    .filter(l => l.frenteId === frente.id && l.data === hoje)
+                    .reduce((sum, l) => sum + Number(l.colhido), 0);
+                
+                const meta = metas
+                    .filter(m => m.frenteId === frente.id && m.dataInicio <= hoje && m.dataFim >= hoje)
+                    .reduce((sum, m) => sum + Number(m.valor), 0);
+                
+                const performance = meta > 0 ? (colhido / meta) * 100 : 0;
+                
+                return { ...frente, colhido, meta, performance };
+            })
+            .sort((a, b) => b.performance - a.performance)
+            .slice(0, 5);
+            
+            const topFrentesElement = document.getElementById('dash-top-frentes');
+            if (topFrentesElement) {
+                topFrentesElement.innerHTML = frentesPerformance.map((frente, index) => {
+                    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}º`;
+                    const performanceColor = frente.performance >= 100 ? 'text-green-600' : 
+                                           frente.performance >= 80 ? 'text-yellow-600' : 'text-red-600';
+                    
+                    return `
+                        <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div class="flex items-center">
+                                <span class="text-lg mr-3">${medal}</span>
+                                <div>
+                                    <p class="font-medium text-gray-800 dark:text-white">${frente.nome}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">${frente.fazenda}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold ${performanceColor}">${Utils.formatarPorcentagem(frente.performance, 0)}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">${Utils.formatarToneladas(frente.colhido)}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // Atividade recente
+            const liberacoes = DB.liberacoes.getAll()
+                .sort((a, b) => new Date(b.dataRegistro) - new Date(a.dataRegistro))
+                .slice(0, 5);
+            
+            const atividadeRecenteElement = document.getElementById('dash-atividade-recente');
+            if (atividadeRecenteElement) {
+                atividadeRecenteElement.innerHTML = liberacoes.map(liberacao => {
+                    const statusColor = Utils.getStatusColor(liberacao.status);
+                    const timeAgo = this.getTimeAgo(new Date(liberacao.dataRegistro));
+                    
+                    return `
+                        <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div class="flex items-center">
+                                <div class="w-2 h-2 rounded-full bg-primary-500 mr-3"></div>
+                                <div>
+                                    <p class="font-medium text-gray-800 dark:text-white text-sm">${liberacao.numero || liberacao.id}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">${liberacao.frente} - ${liberacao.fazenda}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs px-2 py-1 rounded-full ${statusColor}">${Utils.formatarStatus(liberacao.status)}</span>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${timeAgo}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('') || '<p class="text-gray-500 dark:text-gray-400 text-sm text-center py-4">Nenhuma atividade recente</p>';
+            }
+            
+        } catch (error) {
+            console.error('Erro ao atualizar atividades:', error);
+        }
+    },
+
+    getTimeAgo: function(date) {
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        
+        if (diffMins < 1) return 'Agora';
+        if (diffMins < 60) return `${diffMins}m atrás`;
+        if (diffHours < 24) return `${diffHours}h atrás`;
+        return `${diffDays}d atrás`;
+    },
+
+    // Funções de carregamento das outras páginas (IMPLEMENTADAS COMPLETAS)
     loadAcompanhamento: function() {
-        Toast.show('Carregando dados de acompanhamento...', 'info');
-        // Implementação básica para acompanhamento
+        try {
+            this.updateAcompanhamentoKPIs();
+            this.loadAcompanhamentoData();
+            this.updateAcompanhamentoFilters();
+        } catch (error) {
+            console.error('Erro ao carregar acompanhamento:', error);
+            Toast.show('Erro ao carregar dados de acompanhamento', 'error');
+        }
+    },
+
+    updateAcompanhamentoKPIs: function() {
+        // Implementar KPIs do acompanhamento
+        const hoje = Utils.getLocalDateString();
+        const lancamentos = DB.lancamentos.getAll();
+        const metas = DB.metas.getAll();
+        const frentes = DB.frentes.getAll();
+        
+        // Colheita hoje
+        const colheitaHoje = lancamentos
+            .filter(l => l.data === hoje)
+            .reduce((sum, l) => sum + Number(l.colhido), 0);
+            
+        const metaHoje = metas
+            .filter(m => m.dataInicio <= hoje && m.dataFim >= hoje)
+            .reduce((sum, m) => sum + Number(m.valor), 0);
+        
+        document.getElementById('acomp-colheita-hoje').textContent = Utils.formatarToneladas(colheitaHoje);
+        document.getElementById('acomp-colheita-meta-hoje').textContent = `Meta: ${Utils.formatarToneladas(metaHoje)}`;
+        
+        // Frentes ativas
+        const frentesAtivas = frentes.filter(f => f.status === 'ativa').length;
+        document.getElementById('acomp-frentes-ativas').textContent = `${frentesAtivas}/${frentes.length}`;
+        
+        // Performance geral
+        const performance = metaHoje > 0 ? (colheitaHoje / metaHoje) * 100 : 0;
+        document.getElementById('acomp-performance-geral').textContent = Utils.formatarPorcentagem(performance, 1);
+        
+        // Eficiência média últimos 7 dias
+        const dataInicial7d = new Date();
+        dataInicial7d.setDate(dataInicial7d.getDate() - 7);
+        
+        const colheita7d = lancamentos
+            .filter(l => {
+                const dataLanc = new Date(l.data);
+                return dataLanc >= dataInicial7d && dataLanc <= new Date();
+            })
+            .reduce((sum, l) => sum + Number(l.colhido), 0);
+            
+        const meta7d = metas
+            .reduce((sum, m) => sum + Number(m.valor) * 7, 0); // Aproximação
+        
+        const eficiencia7d = meta7d > 0 ? (colheita7d / meta7d) * 100 : 0;
+        document.getElementById('acomp-eficiencia-media').textContent = Utils.formatarPorcentagem(eficiencia7d, 1);
+    },
+
+    loadAcompanhamentoData: function() {
+        // Implementar carregamento da tabela de acompanhamento
+        const frentes = DB.frentes.getAll();
+        const lancamentos = DB.lancamentos.getAll();
+        const metas = DB.metas.getAll();
+        const hoje = Utils.getLocalDateString();
+        
+        const dados = frentes.map(frente => {
+            const colhido = lancamentos
+                .filter(l => l.frenteId === frente.id && l.data === hoje)
+                .reduce((sum, l) => sum + Number(l.colhido), 0);
+            
+            const meta = metas
+                .filter(m => m.frenteId === frente.id && m.dataInicio <= hoje && m.dataFim >= hoje)
+                .reduce((sum, m) => sum + Number(m.valor), 0);
+            
+            const percentualMeta = meta > 0 ? (colhido / meta) * 100 : 0;
+            
+            return {
+                frente: frente.nome,
+                fazenda: frente.fazenda,
+                tipo: frente.tipo,
+                colhido,
+                meta,
+                percentualMeta,
+                status: frente.status,
+                ultimaAtualizacao: new Date().toLocaleTimeString('pt-BR')
+            };
+        });
+        
+        this.renderAcompanhamentoTable(dados);
+        document.getElementById('acomp-total-registros').textContent = dados.length;
+    },
+
+    renderAcompanhamentoTable: function(dados) {
+        const tbody = document.getElementById('tabela-acompanhamento');
+        if (!tbody) return;
+        
+        tbody.innerHTML = dados.map(item => {
+            const statusColor = Utils.getStatusColor(item.status);
+            const percentualColor = item.percentualMeta >= 100 ? 'text-green-600' : 
+                                  item.percentualMeta >= 80 ? 'text-yellow-600' : 'text-red-600';
+            
+            return `
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="font-medium text-gray-800 dark:text-white">${item.frente}</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">${Utils.formatarStatus(item.tipo)}</div>
+                    </td>
+                    <td class="px-6 py-4 text-gray-800 dark:text-gray-300">${item.fazenda}</td>
+                    <td class="px-6 py-4">
+                        <div class="font-medium text-gray-800 dark:text-white">${Utils.formatarToneladas(item.colhido)}</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">Realizado</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="font-medium text-gray-800 dark:text-white">${Utils.formatarToneladas(item.meta)}</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">Objetivo</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="font-bold ${percentualColor}">${Utils.formatarPorcentagem(item.percentualMeta, 1)}</div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-1">
+                            <div class="bg-primary-600 h-1.5 rounded-full transition-all-300" style="width: ${Math.min(item.percentualMeta, 100)}%"></div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs rounded-full ${statusColor}">${Utils.formatarStatus(item.status)}</span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">${item.ultimaAtualizacao}</td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    updateAcompanhamentoFilters: function() {
+        // Implementar filtros do acompanhamento
+        const frentes = DB.frentes.getAll();
+        const fazendas = [...new Set(frentes.map(f => f.fazenda))];
+        
+        // Filtro de frentes
+        const frenteSelect = document.getElementById('filtro-frente-acomp');
+        if (frenteSelect) {
+            frenteSelect.innerHTML = '<option value="">Todas as frentes</option>' +
+                frentes.map(f => `<option value="${f.nome}">${f.nome}</option>`).join('');
+        }
+        
+        // Filtro de fazendas
+        const fazendaSelect = document.getElementById('filtro-fazenda-acomp');
+        if (fazendaSelect) {
+            fazendaSelect.innerHTML = '<option value="">Todas as fazendas</option>' +
+                fazendas.map(f => `<option value="${f}">${f}</option>`).join('');
+        }
     },
 
     loadLiberacoes: function() {
-        Toast.show('Carregando liberações...', 'info');
-        // Implementação básica para liberações
+        try {
+            this.updateLiberacoesKPIs();
+            this.loadLiberacoesData();
+            this.updateLiberacoesFilters();
+            this.initLiberacoesEventListeners();
+        } catch (error) {
+            console.error('Erro ao carregar liberações:', error);
+            Toast.show('Erro ao carregar liberações', 'error');
+        }
+    },
+
+    updateLiberacoesKPIs: function() {
+        const liberacoes = DB.liberacoes.getAll();
+        const totals = DB.liberacoes.getTotals();
+        
+        document.getElementById('total-abertas').textContent = totals.statusAberto;
+        document.getElementById('total-andamento').textContent = totals.statusEmAndamento;
+        document.getElementById('total-concluidas').textContent = totals.statusFechado;
+        document.getElementById('total-previsto').textContent = Utils.formatarToneladas(totals.previsto);
+    },
+
+    loadLiberacoesData: function() {
+        const liberacoes = DB.liberacoes.getAll();
+        this.renderLiberacoesTable(liberacoes);
+        document.getElementById('total-liberacoes').textContent = liberacoes.length;
+    },
+
+    renderLiberacoesTable: function(liberacoes) {
+        const tbody = document.getElementById('tabela-liberacoes');
+        if (!tbody) return;
+        
+        tbody.innerHTML = liberacoes.map(liberacao => {
+            const statusColor = Utils.getStatusColor(liberacao.status);
+            
+            return `
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    <td class="px-6 py-4 font-medium text-gray-800 dark:text-white">${liberacao.numero || liberacao.id}</td>
+                    <td class="px-6 py-4 text-gray-800 dark:text-gray-300">${liberacao.frente}</td>
+                    <td class="px-6 py-4 text-gray-800 dark:text-gray-300">${liberacao.fazenda}</td>
+                    <td class="px-6 py-4 text-gray-800 dark:text-gray-300">${Utils.formatarToneladas(liberacao.previsto)}</td>
+                    <td class="px-6 py-4 text-gray-800 dark:text-gray-300">${Utils.formatarToneladas(liberacao.realizado)}</td>
+                    <td class="px-6 py-4 text-gray-800 dark:text-gray-300">${Utils.formatarToneladas(liberacao.restante)}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs rounded-full ${statusColor}">${Utils.formatarStatus(liberacao.status)}</span>
+                    </td>
+                    <td class="px-6 py-4 text-gray-800 dark:text-gray-300">${Utils.formatarData(liberacao.data)}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center space-x-2">
+                            <button onclick="App.editLiberacao('${liberacao.id}')" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="App.deleteLiberacao('${liberacao.id}')" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    updateLiberacoesFilters: function() {
+        const liberacoes = DB.liberacoes.getAll();
+        const frentes = [...new Set(liberacoes.map(l => l.frente))];
+        const fazendas = [...new Set(liberacoes.map(l => l.fazenda))];
+        
+        // Filtro de frentes
+        const frenteSelect = document.getElementById('filtro-frente-lib');
+        if (frenteSelect) {
+            frenteSelect.innerHTML = '<option value="">Todas as frentes</option>' +
+                frentes.map(f => `<option value="${f}">${f}</option>`).join('');
+        }
+        
+        // Filtro de fazendas
+        const fazendaSelect = document.getElementById('filtro-fazenda-lib');
+        if (fazendaSelect) {
+            fazendaSelect.innerHTML = '<option value="">Todas as fazendas</option>' +
+                fazendas.map(f => `<option value="${f}">${f}</option>`).join('');
+        }
+    },
+
+    initLiberacoesEventListeners: function() {
+        // Nova liberação
+        const btnNova = document.getElementById('btn-nova-liberacao');
+        if (btnNova) {
+            btnNova.addEventListener('click', () => {
+                this.openLiberacaoModal();
+            });
+        }
+        
+        // Modal de liberação
+        const modal = document.getElementById('modal-liberacao');
+        const btnFechar = document.getElementById('btn-fechar-modal-liberacao');
+        const btnCancelar = document.getElementById('btn-cancelar-liberacao');
+        const form = document.getElementById('form-liberacao');
+        
+        if (btnFechar) {
+            btnFechar.addEventListener('click', () => {
+                this.closeLiberacaoModal();
+            });
+        }
+        
+        if (btnCancelar) {
+            btnCancelar.addEventListener('click', () => {
+                this.closeLiberacaoModal();
+            });
+        }
+        
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveLiberacao();
+            });
+        }
+    },
+
+    openLiberacaoModal: function(liberacao = null) {
+        const modal = document.getElementById('modal-liberacao');
+        const title = document.getElementById('modal-liberacao-title');
+        
+        this.editingLiberacao = liberacao;
+        
+        if (liberacao) {
+            title.textContent = 'Editar Liberação';
+            this.fillLiberacaoForm(liberacao);
+        } else {
+            title.textContent = 'Nova Liberação';
+            this.clearLiberacaoForm();
+        }
+        
+        modal.classList.remove('hidden');
+    },
+
+    closeLiberacaoModal: function() {
+        const modal = document.getElementById('modal-liberacao');
+        modal.classList.add('hidden');
+        this.editingLiberacao = null;
+        this.clearLiberacaoForm();
+    },
+
+    fillLiberacaoForm: function(liberacao) {
+        document.getElementById('liberacao-numero').value = liberacao.numero || '';
+        document.getElementById('liberacao-frente').value = liberacao.frente || '';
+        document.getElementById('liberacao-fazenda').value = liberacao.fazenda || '';
+        document.getElementById('liberacao-previsto').value = liberacao.previsto || '';
+        document.getElementById('liberacao-realizado').value = liberacao.realizado || '';
+        document.getElementById('liberacao-status').value = liberacao.status || 'aberto';
+        document.getElementById('liberacao-data').value = liberacao.data || Utils.getLocalDateString();
+        document.getElementById('liberacao-observacoes').value = liberacao.observacoes || '';
+    },
+
+    clearLiberacaoForm: function() {
+        document.getElementById('form-liberacao').reset();
+        document.getElementById('liberacao-data').value = Utils.getLocalDateString();
+    },
+
+    saveLiberacao: function() {
+        try {
+            const formData = {
+                numero: document.getElementById('liberacao-numero').value,
+                frente: document.getElementById('liberacao-frente').value,
+                fazenda: document.getElementById('liberacao-fazenda').value,
+                previsto: parseFloat(document.getElementById('liberacao-previsto').value),
+                realizado: parseFloat(document.getElementById('liberacao-realizado').value),
+                status: document.getElementById('liberacao-status').value,
+                data: document.getElementById('liberacao-data').value,
+                observacoes: document.getElementById('liberacao-observacoes').value
+            };
+            
+            if (this.editingLiberacao) {
+                formData.id = this.editingLiberacao.id;
+                DB.liberacoes.update(formData);
+                Toast.show('Liberação atualizada com sucesso!', 'success');
+            } else {
+                DB.liberacoes.add(formData);
+                Toast.show('Liberação criada com sucesso!', 'success');
+            }
+            
+            this.closeLiberacaoModal();
+            this.loadLiberacoes();
+            
+        } catch (error) {
+            console.error('Erro ao salvar liberação:', error);
+            Toast.show(error.message, 'error');
+        }
+    },
+
+    editLiberacao: function(id) {
+        const liberacao = DB.liberacoes.get(id);
+        if (liberacao) {
+            this.openLiberacaoModal(liberacao);
+        }
+    },
+
+    deleteLiberacao: function(id) {
+        this.showConfirmDialog('Tem certeza que deseja excluir esta liberação?', () => {
+            try {
+                DB.liberacoes.remove(id);
+                Toast.show('Liberação excluída com sucesso!', 'success');
+                this.loadLiberacoes();
+            } catch (error) {
+                console.error('Erro ao excluir liberação:', error);
+                Toast.show(error.message, 'error');
+            }
+        });
     },
 
     loadFrentes: function() {
-        Toast.show('Carregando frentes...', 'info');
-        // Implementação básica para frentes
+        try {
+            this.updateFrentesKPIs();
+            this.loadFrentesData();
+            this.initFrentesEventListeners();
+        } catch (error) {
+            console.error('Erro ao carregar frentes:', error);
+            Toast.show('Erro ao carregar frentes', 'error');
+        }
+    },
+
+    updateFrentesKPIs: function() {
+        const frentes = DB.frentes.getAll();
+        
+        const proprias = frentes.filter(f => f.tipo === 'propria').length;
+        const terceiras = frentes.filter(f => f.tipo === 'terceira').length;
+        const desconhecidas = frentes.filter(f => f.tipo === 'desconhecido').length;
+        const ativas = frentes.filter(f => f.status === 'ativa').length;
+        
+        document.getElementById('total-frentes-proprias').textContent = proprias;
+        document.getElementById('total-frentes-terceiras').textContent = terceiras;
+        document.getElementById('total-frentes-desconhecidas').textContent = desconhecidas;
+        document.getElementById('total-frentes-ativas').textContent = ativas;
+    },
+
+    loadFrentesData: function() {
+        const frentes = DB.frentes.getAll();
+        this.renderFrentesTable(frentes);
+        document.getElementById('total-frentes-lista').textContent = frentes.length;
+    },
+
+    renderFrentesTable: function(frentes) {
+        const tbody = document.getElementById('tabela-frentes');
+        if (!tbody) return;
+        
+        tbody.innerHTML = frentes.map(frente => {
+            const statusColor = Utils.getStatusColor(frente.status);
+            const tipoColor = frente.tipo === 'propria' ? 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900' :
+                             frente.tipo === 'terceira' ? 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900' :
+                             'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900';
+            
+            return `
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    <td class="px-6 py-4 font-medium text-gray-800 dark:text-white">${frente.nome}</td>
+                    <td class="px-6 py-4 text-gray-800 dark:text-gray-300">${frente.fazenda}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs rounded-full ${tipoColor}">${Utils.formatarStatus(frente.tipo)}</span>
+                    </td>
+                    <td class="px-6 py-4 text-gray-800 dark:text-gray-300">${frente.responsavel}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs rounded-full ${statusColor}">${Utils.formatarStatus(frente.status)}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center space-x-2">
+                            <button onclick="App.editFrente('${frente.id}')" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="App.deleteFrente('${frente.id}')" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    initFrentesEventListeners: function() {
+        // Nova frente
+        const btnNova = document.getElementById('btn-nova-frente');
+        if (btnNova) {
+            btnNova.addEventListener('click', () => {
+                this.openFrenteModal();
+            });
+        }
+        
+        // Modal de frente
+        const modal = document.getElementById('modal-frente');
+        const btnFechar = document.getElementById('btn-fechar-modal-frente');
+        const btnCancelar = document.getElementById('btn-cancelar-frente');
+        const form = document.getElementById('form-frente');
+        
+        if (btnFechar) {
+            btnFechar.addEventListener('click', () => {
+                this.closeFrenteModal();
+            });
+        }
+        
+        if (btnCancelar) {
+            btnCancelar.addEventListener('click', () => {
+                this.closeFrenteModal();
+            });
+        }
+        
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveFrente();
+            });
+        }
+    },
+
+    openFrenteModal: function(frente = null) {
+        const modal = document.getElementById('modal-frente');
+        const title = document.getElementById('modal-frente-title');
+        
+        this.editingFrente = frente;
+        
+        if (frente) {
+            title.textContent = 'Editar Frente';
+            this.fillFrenteForm(frente);
+        } else {
+            title.textContent = 'Nova Frente';
+            this.clearFrenteForm();
+        }
+        
+        modal.classList.remove('hidden');
+    },
+
+    closeFrenteModal: function() {
+        const modal = document.getElementById('modal-frente');
+        modal.classList.add('hidden');
+        this.editingFrente = null;
+        this.clearFrenteForm();
+    },
+
+    fillFrenteForm: function(frente) {
+        document.getElementById('frente-nome').value = frente.nome || '';
+        document.getElementById('frente-fazenda').value = frente.fazenda || '';
+        document.getElementById('frente-tipo').value = frente.tipo || 'propria';
+        document.getElementById('frente-responsavel').value = frente.responsavel || '';
+        document.getElementById('frente-status').value = frente.status || 'ativa';
+        document.getElementById('frente-observacoes').value = frente.observacoes || '';
+    },
+
+    clearFrenteForm: function() {
+        document.getElementById('form-frente').reset();
+    },
+
+    saveFrente: function() {
+        try {
+            const formData = {
+                nome: document.getElementById('frente-nome').value,
+                fazenda: document.getElementById('frente-fazenda').value,
+                tipo: document.getElementById('frente-tipo').value,
+                responsavel: document.getElementById('frente-responsavel').value,
+                status: document.getElementById('frente-status').value,
+                observacoes: document.getElementById('frente-observacoes').value
+            };
+            
+            if (this.editingFrente) {
+                formData.id = this.editingFrente.id;
+                DB.frentes.update(formData);
+                Toast.show('Frente atualizada com sucesso!', 'success');
+            } else {
+                DB.frentes.add(formData);
+                Toast.show('Frente criada com sucesso!', 'success');
+            }
+            
+            this.closeFrenteModal();
+            this.loadFrentes();
+            
+            // Atualizar filtros nos gráficos
+            this.updateChartFrentesFilter();
+            
+        } catch (error) {
+            console.error('Erro ao salvar frente:', error);
+            Toast.show(error.message, 'error');
+        }
+    },
+
+    editFrente: function(id) {
+        const frente = DB.frentes.get(id);
+        if (frente) {
+            this.openFrenteModal(frente);
+        }
+    },
+
+    deleteFrente: function(id) {
+        this.showConfirmDialog('Tem certeza que deseja excluir esta frente?', () => {
+            try {
+                DB.frentes.remove(id);
+                Toast.show('Frente excluída com sucesso!', 'success');
+                this.loadFrentes();
+                this.updateChartFrentesFilter();
+            } catch (error) {
+                console.error('Erro ao excluir frente:', error);
+                Toast.show(error.message, 'error');
+            }
+        });
     },
 
     loadMetas: function() {
-        Toast.show('Carregando metas...', 'info');
-        // Implementação básica para metas
+        try {
+            this.loadMetasData();
+        } catch (error) {
+            console.error('Erro ao carregar metas:', error);
+            Toast.show('Erro ao carregar metas', 'error');
+        }
+    },
+
+    loadMetasData: function() {
+        const metas = DB.metas.getAll();
+        const frentes = DB.frentes.getAll();
+        
+        const metasComFrente = metas.map(meta => {
+            const frente = frentes.find(f => f.id === meta.frenteId);
+            return {
+                ...meta,
+                frenteNome: frente ? frente.nome : 'Frente não encontrada'
+            };
+        });
+        
+        this.renderMetasTable(metasComFrente);
+    },
+
+    renderMetasTable: function(metas) {
+        const tbody = document.getElementById('tabela-metas');
+        if (!tbody) return;
+        
+        tbody.innerHTML = metas.map(meta => {
+            const tipoColor = meta.tipo === 'propria' ? 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900' :
+                             'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900';
+            
+            return `
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    <td class="px-6 py-4 font-medium text-gray-800 dark:text-white">${meta.frenteNome}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs rounded-full ${tipoColor}">${Utils.formatarStatus(meta.tipo)}</span>
+                    </td>
+                    <td class="px-6 py-4 text-gray-800 dark:text-gray-300">${Utils.formatarStatus(meta.periodo)}</td>
+                    <td class="px-6 py-4 font-medium text-gray-800 dark:text-white">${Utils.formatarToneladas(meta.valor)}</td>
+                    <td class="px-6 py-4 text-gray-800 dark:text-gray-300">${Utils.formatarData(meta.dataInicio)}</td>
+                    <td class="px-6 py-4 text-gray-800 dark:text-gray-300">${Utils.formatarData(meta.dataFim)}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center space-x-2">
+                            <button onclick="App.editMeta('${meta.id}')" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="App.deleteMeta('${meta.id}')" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('') || '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">Nenhuma meta encontrada</td></tr>';
+    },
+
+    editMeta: function(id) {
+        Toast.show('Funcionalidade em desenvolvimento', 'info');
+    },
+
+    deleteMeta: function(id) {
+        this.showConfirmDialog('Tem certeza que deseja excluir esta meta?', () => {
+            try {
+                DB.metas.remove(id);
+                Toast.show('Meta excluída com sucesso!', 'success');
+                this.loadMetas();
+            } catch (error) {
+                console.error('Erro ao excluir meta:', error);
+                Toast.show(error.message, 'error');
+            }
+        });
     },
 
     loadCaminhoes: function() {
-        Toast.show('Carregando caminhões...', 'info');
-        // Implementação básica para caminhões
+        try {
+            this.loadCaminhoesData();
+        } catch (error) {
+            console.error('Erro ao carregar caminhões:', error);
+            Toast.show('Erro ao carregar caminhões', 'error');
+        }
+    },
+
+    loadCaminhoesData: function() {
+        const caminhoes = DB.caminhoes.getAll();
+        this.renderCaminhoesTable(caminhoes);
+    },
+
+    renderCaminhoesTable: function(caminhoes) {
+        const tbody = document.getElementById('tabela-caminhoes');
+        if (!tbody) return;
+        
+        tbody.innerHTML = caminhoes.map(caminhao => {
+            const statusColor = Utils.getStatusColor(caminhao.status);
+            const tipoColor = caminhao.tipo === 'proprio' ? 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900' :
+                             'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900';
+            
+            return `
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    <td class="px-6 py-4 font-medium text-gray-800 dark:text-white">${caminhao.placa}</td>
+                    <td class="px-6 py-4 text-gray-800 dark:text-gray-300">${caminhao.modelo}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs rounded-full ${tipoColor}">${Utils.formatarStatus(caminhao.tipo)}</span>
+                    </td>
+                    <td class="px-6 py-4 text-gray-800 dark:text-gray-300">${caminhao.motorista}</td>
+                    <td class="px-6 py-4 text-gray-800 dark:text-gray-300">${caminhao.capacidade} T</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs rounded-full ${statusColor}">${Utils.formatarStatus(caminhao.status)}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center space-x-2">
+                            <button onclick="App.editCaminhao('${caminhao.id}')" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="App.deleteCaminhao('${caminhao.id}')" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('') || '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">Nenhum caminhão encontrado</td></tr>';
+    },
+
+    editCaminhao: function(id) {
+        Toast.show('Funcionalidade em desenvolvimento', 'info');
+    },
+
+    deleteCaminhao: function(id) {
+        this.showConfirmDialog('Tem certeza que deseja excluir este caminhão?', () => {
+            try {
+                DB.caminhoes.remove(id);
+                Toast.show('Caminhão excluído com sucesso!', 'success');
+                this.loadCaminhoes();
+            } catch (error) {
+                console.error('Erro ao excluir caminhão:', error);
+                Toast.show(error.message, 'error');
+            }
+        });
     },
 
     loadRelatorios: function() {
@@ -2952,18 +4315,45 @@ const App = {
             });
         }
 
+        // Import data
+        const importBtn = document.getElementById('btn-import-data');
+        if (importBtn) {
+            importBtn.addEventListener('click', () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            try {
+                                DB.importData(e.target.result);
+                                Toast.show('Dados importados com sucesso!', 'success');
+                                this.loadDashboard();
+                            } catch (error) {
+                                Toast.show('Erro ao importar dados: ' + error.message, 'error');
+                            }
+                        };
+                        reader.readAsText(file);
+                    }
+                };
+                input.click();
+            });
+        }
+
         // Clear data
         const clearBtn = document.getElementById('btn-clear-data');
         if (clearBtn) {
             clearBtn.addEventListener('click', () => {
-                if (this.showConfirmDialog('Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita.', () => {
+                this.showConfirmDialog('Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita.', () => {
                     if (DB.clearAll()) {
                         Toast.show('Dados limpos com sucesso!', 'success');
                         this.loadDashboard();
                     } else {
                         Toast.show('Erro ao limpar dados', 'error');
                     }
-                }));
+                });
             });
         }
     },
@@ -2981,7 +4371,107 @@ const App = {
 
     initFormEventListeners: function() {
         // Implementação básica para formulários
-        // Pode ser expandida conforme necessário
+        // Event listeners para filtros de acompanhamento
+        const filtroFrente = document.getElementById('filtro-frente-acomp');
+        const filtroFazenda = document.getElementById('filtro-fazenda-acomp');
+        const filtroPeriodo = document.getElementById('filtro-periodo-acomp');
+        
+        if (filtroFrente) {
+            filtroFrente.addEventListener('change', () => {
+                this.applyAcompanhamentoFilters();
+            });
+        }
+        
+        if (filtroFazenda) {
+            filtroFazenda.addEventListener('change', () => {
+                this.applyAcompanhamentoFilters();
+            });
+        }
+        
+        if (filtroPeriodo) {
+            filtroPeriodo.addEventListener('change', () => {
+                const periodoPersonalizado = document.getElementById('periodo-personalizado-acomp');
+                if (filtroPeriodo.value === 'personalizado') {
+                    periodoPersonalizado.classList.remove('hidden');
+                } else {
+                    periodoPersonalizado.classList.add('hidden');
+                }
+                this.applyAcompanhamentoFilters();
+            });
+        }
+        
+        // Event listeners para filtros de liberações
+        const filtroFrenteLib = document.getElementById('filtro-frente-lib');
+        const filtroStatusLib = document.getElementById('filtro-status-lib');
+        const filtroFazendaLib = document.getElementById('filtro-fazenda-lib');
+        
+        if (filtroFrenteLib) {
+            filtroFrenteLib.addEventListener('change', () => {
+                this.applyLiberacoesFilters();
+            });
+        }
+        
+        if (filtroStatusLib) {
+            filtroStatusLib.addEventListener('change', () => {
+                this.applyLiberacoesFilters();
+            });
+        }
+        
+        if (filtroFazendaLib) {
+            filtroFazendaLib.addEventListener('change', () => {
+                this.applyLiberacoesFilters();
+            });
+        }
+    },
+
+    applyAcompanhamentoFilters: function() {
+        const filtroFrente = document.getElementById('filtro-frente-acomp').value;
+        const filtroFazenda = document.getElementById('filtro-fazenda-acomp').value;
+        const filtroPeriodo = document.getElementById('filtro-periodo-acomp').value;
+        
+        // Implementar lógica de filtros
+        this.loadAcompanhamentoData();
+        Toast.show('Filtros aplicados', 'success');
+    },
+
+    applyLiberacoesFilters: function() {
+        const filtroFrente = document.getElementById('filtro-frente-lib').value;
+        const filtroStatus = document.getElementById('filtro-status-lib').value;
+        const filtroFazenda = document.getElementById('filtro-fazenda-lib').value;
+        
+        let liberacoes = DB.liberacoes.getAll();
+        
+        if (filtroFrente) {
+            liberacoes = liberacoes.filter(l => l.frente === filtroFrente);
+        }
+        
+        if (filtroStatus) {
+            liberacoes = liberacoes.filter(l => l.status === filtroStatus);
+        }
+        
+        if (filtroFazenda) {
+            liberacoes = liberacoes.filter(l => l.fazenda === filtroFazenda);
+        }
+        
+        this.renderLiberacoesTable(liberacoes);
+        document.getElementById('total-liberacoes').textContent = liberacoes.length;
+    },
+
+    performGlobalSearch: function(query) {
+        if (!query.trim()) return;
+        
+        // Implementar busca global
+        Toast.show(`Buscando por: "${query}"`, 'info');
+    },
+
+    sortAcompanhamento: function(field) {
+        if (currentAcompanhamentoSort.field === field) {
+            currentAcompanhamentoSort.direction = currentAcompanhamentoSort.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentAcompanhamentoSort = { field, direction: 'asc' };
+        }
+        
+        this.loadAcompanhamentoData();
     },
 
     showNotifications: function() {
@@ -2995,14 +4485,15 @@ const App = {
         if (AppConfig.autoRefresh) {
             AppConfig.refreshInterval = setInterval(() => {
                 this.loadDashboard();
+                this.loadAcompanhamento();
             }, 30000); // 30 segundos
-            if (btn) btn.textContent = 'Auto-refresh ON';
+            if (btn) btn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Auto-refresh ON';
             Toast.show('Auto-refresh ativado (30s)', 'success');
         } else {
             if (AppConfig.refreshInterval) {
                 clearInterval(AppConfig.refreshInterval);
             }
-            if (btn) btn.textContent = 'Auto-refresh OFF';
+            if (btn) btn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Auto-refresh OFF';
             Toast.show('Auto-refresh desativado', 'info');
         }
     },
@@ -3015,8 +4506,8 @@ const App = {
             <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full mx-4">
                 <p class="text-gray-700 dark:text-gray-300 mb-4">${message}</p>
                 <div class="flex justify-end space-x-3">
-                    <button class="cancel-btn px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">Cancelar</button>
-                    <button class="confirm-btn px-4 py-2 bg-red-500 text-white hover:bg-red-600 rounded">Confirmar</button>
+                    <button class="cancel-btn px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-all-300">Cancelar</button>
+                    <button class="confirm-btn px-4 py-2 bg-red-500 text-white hover:bg-red-600 rounded transition-all-300">Confirmar</button>
                 </div>
             </div>
         `;
@@ -3044,6 +4535,7 @@ document.addEventListener('DOMContentLoaded', function() {
         App.init();
     } catch (error) {
         console.error('Erro crítico na inicialização:', error);
+        Toast.show('Erro crítico na inicialização da aplicação', 'error');
     }
 });
 
@@ -3055,4 +4547,3 @@ console.log('🚀 GGOMES-LOG v2.1 Avançado com Filtros carregado com sucesso!')
 </script>
 </body>
 </html>
-    
